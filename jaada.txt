@@ -1,0 +1,22 @@
+Estimado Jimmy
+
+Como es de tu conocimiento, y de acuerdo con las disposiciones de la Dirección General (DG), nos encontramos realizando el seguimiento al impacto del cambio de tarifa del 0% al 15%en los productos correspondientes.
+
+Para este análisis, el área de Desarrollo nos facilitó las bases de datos de marzo y junio de 2026, permitiéndonos comparar el comportamiento antes y después de la implementación de la nueva medida.
+
+Tras una depuración inicial realizada por el área de Estudios, detectamos inconsistencias en la variable "descripción", la cual incluye productos no relacionados con el sector de alimentos. Por este motivo, y para dar continuidad al valioso apoyo que nos brindaste meses atrás, solicitamos de tu colaboración para ejecutar el modelo de minería de texto desarrollado.
+
+El objetivo de esta corrida es doble:
+•	Identificar las categorías con las que se trabajó en el análisis previo.
+•	Detectar nuevos alimentos que cambiaron de tarifa y que no fueron incluidos en los criterios de búsqueda iniciales.
+
+Para facilitar este proceso, adjuntamos un primer vector con palabras clave que deben ser excluidas, ya que no corresponden a la categoría de alimentos.
+
+Adicionalmente, se adjunta el link donde podrás encontrar las dos bdd que antes se mencionó para tu descarga:
+
+\\sri.ad\fileserver\Direccion_General\DNPGE\DNPGE-Inv_Estudios\4_MINITECA\análisis_iva0_iva15
+
+Es importante comentarte que en las bases de marzo se encuentran los productos con 0% de ese mes, y en la base de junio se encuentra productos con 0% y con 15% si se construye una clave RUC-CODIGO PRINCIPAL, se puede rastrear los productos de marzo en junio que cambiaron de tarifa.
+
+Agradecemos de antemano tu gestión y quedamos atentos a tus comentarios.
+
