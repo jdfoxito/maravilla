@@ -1,0 +1,171 @@
+Aquí tienes la hoja de ruta completa y definitiva con todos los comandos para llegar hoy al servidor y resolver **PDM, la base de datos, las rutas de Nginx y los bloqueos de red**, en orden lógico de ejecución:
+
+---
+
+### 1. Reparar PDM definitivamente (El eslabón perdido)
+
+En tus pruebas anteriores, `pdm run` fallaba con `ModuleNotFoundError: No module named 'asyncpg'` porque cuando desactivaste el entorno virtual (`use_venv false`), PDM creó una carpeta vacía llamada `__pypackages__`, y cuando usaste `.venv`, ese entorno virtual se creó sin el módulo `pip` adentro (`No module named pip`).
+
+Tienes **dos formas** de dejarlo 100% operativo hoy:
+
+* **Opción A — Reparar el `.venv` de PDM offline (Para que `pdm run` funcione tal como dice el Runbook):**
+Ejecuta estos 3 comandos en CMD dentro del proyecto para inyectar `pip` de forma nativa (con `ensurepip`, que ya viene incluido en Python sin requerir internet) e instalar tus paquetes en el `.venv`:
+```cmd
+cd /d E:\sri\soluciones\DG\VisorDG\app\backend
+
+:: 1. Reactivar el uso de .venv en PDM y borrar la carpeta vacía __pypackages__
+pdm config python.use_venv true
+if exist __pypackages__ rmdir /s /q __pypackages__
+
+:: 2. Inyectar pip dentro del .venv de forma 100% offline usando el módulo nativo ensurepip
+E:\sri\soluciones\DG\VisorDG\app\backend\.venv\Scripts\python.exe -m ensurepip --upgrade
+
+:: 3. Instalar tus 65 wheels dentro del .venv
+E:\sri\soluciones\DG\VisorDG\app\backend\.venv\Scripts\python.exe -m pip install --no-index --find-links=E:\sri\soluciones\DG\offline -r requirimientos.txt
+
+```
+
+
+*Cómo verificar si funcionó:* Ejecuta `pdm run verificar`. Verás que PDM ya reconoce `asyncpg`, `pandas` y `fastapi` sin arrojar `ModuleNotFoundError`.
+
+
+* **Opción B — Usar el Python global directo (Si prefieres no depender de PDM):**
+Como ya instalaste todo en `E:\py\python.exe`, puedes reemplazar cualquier comando `pdm run ...` del manual por:
+
+
+* Cargar todo: `E:\py\python.exe cargas.py todo --origen local`
+
+* Refrescar: `E:\py\python.exe cargas.py refrescar`
+
+* Verificar: `E:\py\python.exe cargas.py verificar`
+
+* Levantar el API: `E:\py\python.exe -m uvicorn main:app --host 127.0.0.1 --port 8000`
+
+
+
+
+---
+
+### 2. Inicializar las Tablas de PostgreSQL 18 y Cargar Datos
+
+El error `UndefinedTableError: no existe la relación «visordg.brigadas_atendidos»` ocurre porque la base `detalles` aún no tiene creadas las tablas del esquema `visordg`.
+
+1. **Crear el esquema y tablas en PostgreSQL 18:** Consola CMD.
+Ejecuta los scripts SQL en el orden del Runbook (asegúrate de usar la letra de unidad real donde está el proyecto, `E:` o `D:`):
+
+```cmd
+"C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres -h localhost -d detalles -f "E:\sri\soluciones\DG\VisorDG\sql\01_esquema_visordg.sql"
+"C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres -h localhost -d detalles -f "E:\sri\soluciones\DG\VisorDG\sql\01c_tablas_dos.sql"
+
+```
+
+*Verificación:* En la consola deben aparecer mensajes `CREATE SCHEMA` y `CREATE TABLE` sin errores fatales.
+
+
+2. **Cargar el catálogo y las 4 fuentes de datos:** Backend.
+Corre la carga inicial apuntando a la carpeta local:
+
+```cmd
+cd /d E:\sri\soluciones\DG\VisorDG\app\backend
+E:\py\python.exe cargas.py catalogo --origen local
+E:\py\python.exe cargas.py todo --origen local
+
+```
+
+*Verificación:* La consola debe terminar con el resumen `ventas=ok · recaudacion=ok · brigadas=ok · capacitaciones=ok`.
+
+
+3. **Dejar el API (FastAPI) encendido en el puerto 8000:** Servicio Activo.
+Si aún no está corriendo (o para reiniciarlo tras la carga), déjalo encendido en una ventana de CMD dedicada:
+
+```cmd
+cd /d E:\sri\soluciones\DG\VisorDG\app\backend
+E:\py\python.exe -m uvicorn main:app --host 127.0.0.1 --port 8000
+
+```
+
+*Verificación:* Abre en el navegador del propio servidor `[http://127.0.0.1:8000/api/v1/health](http://127.0.0.1:8000/api/v1/health)` y confirma que responde `200 OK`.
+
+
+---
+
+### 3. Corregir Rutas y Errores en Nginx (`C:\nginx\conf\nginx.conf`)
+
+En tu `nginx.conf` actual hay tres detalles que causan errores en los logs o páginas en blanco:
+
+1. **Letra de disco del Frontend (`D:` vs `E:`):** En las líneas 189 y 196 de tu `nginx.conf` dice `root "D:/sri/soluciones/DG/VisorDG/app/frontend/dist";`, pero en tu consola el proyecto está en `E:\sri\soluciones\DG\VisorDG`. Cámbialas a `E:/...` si esa es la unidad real.
+
+
+2. **Fuentes tipográficas (`/font`):** Según el `LEEME.md`, las fuentes `Inter` y `JetBrains Mono` están en `app/frontend/dist/font/`. Con el `try_files` de Nginx en `/` ya se sirven solas desde `dist`.
+
+
+3. **Recargar Nginx tras cualquier cambio:**
+```cmd
+cd /d C:\nginx
+nginx.exe -t
+nginx.exe -s reload
+
+```
+
+
+*Verificación:* `nginx.exe -t` debe decir `syntax is ok` y `test is successful`. Luego abre `[http://127.0.0.1:9000](http://127.0.0.1:9000)` en el navegador del propio servidor y comprueba que carga el Visor Gerencial con sus 6 pantallas.
+
+---
+
+### 4. Desbloquear el Acceso desde Otras Computadoras / Otras Redes
+
+Para resolver tanto el `Connection Refused` (puerto 4443 caído) como el `ERR_CONNECTION_TIMED_OUT` (puerto 9000 bloqueado hacia otras PCs):
+
+* **Idea 1: Abrir el Firewall de Windows 11 en el servidor (Obligatorio)**
+Ejecuta en CMD como **Administrador** dentro del servidor (`10.2.0.17`):
+
+
+```cmd
+netsh advfirewall firewall add rule name="SRI_VisorDG_9000" dir=in action=allow protocol=TCP localport=9000 profile=any
+netsh advfirewall firewall add rule name="SRI_HTTPS_443" dir=in action=allow protocol=TCP localport=443 profile=any
+
+```
+
+
+*Verificación:* Prueba entrar a `[http://10.2.0.17:9000](http://10.2.0.17:9000)` desde otra PC de tu misma red.
+
+
+* **Idea 2: Cambiar el Perfil de Red de Windows 11 de "Público" a "Privado"**
+En Windows 11, si la red figura como `Public`, el sistema aplica bloqueos estrictos adicionales. En PowerShell como Administrador:
+```powershell
+Get-NetConnectionProfile
+# Si NetworkCategory dice "Public", cámbialo a "Private":
+Set-NetConnectionProfile -InterfaceIndex (Get-NetConnectionProfile).InterfaceIndex -NetworkCategory Private
+
+```
+
+
+*Verificación:* Corre `Get-NetConnectionProfile` de nuevo y confirma que `NetworkCategory` diga `Private` (o `DomainAuthenticated`).
+* **Idea 3: Unificar el VisorDG en el puerto 443 (Plan Maestro si el SRI bloquea el puerto 9000 entre subredes)**
+Si desde otra red del SRI el puerto `9000` sigue dando *Timed Out* porque los switches institucionales solo dejan pasar el puerto `443` (HTTPS), **evita pedir permisos de firewall de red** publicando el VisorDG en el puerto `443` (o si no vas a usar la app vieja de Flask en este servidor, pon el VisorDG como página principal del puerto `443`).
+
+
+* **Si NO usas Flask en este servidor nuevo:** En el bloque `server { listen 443 ssl http2; ... }` de tu `nginx.conf`, reemplaza los `location` de `flask_backend` por los dos `location` (`/` y `/api/`) que tienes en el puerto `9000` (apuntando a `visordg_backend` y quitando la línea `Content-Security-Policy` restrictiva de la línea 91 para que permita WebSockets y estilos del visor).
+
+
+* *Verificación:* Al entrar a `[https://10.2.0.17](https://10.2.0.17)` desde cualquier red del SRI, abrirá directamente el VisorDG sin usar el puerto 9000 ni dar error `10061` de Flask.
+
+
+
+
+* **Idea 4: Si SÍ necesitas levantar Flask (Servidor 1 en puerto 4443)**
+Si en ese mismo servidor también debe correr la aplicación de retenciones/papeles de trabajo (Flask), busca en qué puerto levantó o iníciala en el `4443`:
+
+
+```cmd
+:: Ver todos los procesos de Python y sus puertos actuales
+for /f "tokens=2" %i in ('tasklist /fi "imagename eq python.exe" /nh') do @netstat -ano | findstr %i
+
+```
+
+
+*Verificación:* Si ves que Flask levantó en el `5000`, cambia `server 127.0.0.1:4443;` por `server 127.0.0.1:5000;` en la línea 68 de `nginx.conf` y ejecuta `nginx -s reload`.
+
+
+
+¿En este servidor nuevo (`10.2.0.17`) también vas a correr la aplicación antigua de Flask (Papeles de Trabajo), o este servidor será exclusivo para el VisorDG?
