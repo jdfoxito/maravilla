@@ -1,0 +1,349 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Revisión e-IAD Fabric</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: informe técnico de una columna, mismo sistema visual del informe de metodología (negro + filos azul marino) */
+:root{
+  --ink:#0a0d14; --ink-2:#2a3242; --mute:#5a6578;
+  --navy:#0b2a5b; --navy-2:#1f4e9c; --blue-3:#4a7bc8; --blue-4:#8fb0e0; --blue-5:#dbe6f6; --blue-6:#eef3fb;
+  --paper:#ffffff; --line:#c9d3e3; --alert:#b3362a; --warn:#a86a00; --ok:#1e7a4c;
+  --f-display:'Archivo','Arial Narrow',Arial,sans-serif;
+  --f-body:'IBM Plex Sans','Segoe UI',system-ui,sans-serif;
+  --f-mono:'IBM Plex Mono',Consolas,'Courier New',monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:15.5px;line-height:1.6;margin:0}
+.wrap{max-width:1120px;margin:0 auto;padding-inline:20px;padding-block:28px 64px}
+h1,h2,h3{font-family:var(--f-display);color:var(--ink);text-wrap:balance;margin:0}
+p{margin:0;max-width:72ch}
+.mono{font-family:var(--f-mono);font-size:.86em}
+.cover{border:2px solid var(--navy);border-top-width:10px;padding:30px 32px 26px;display:grid;gap:16px}
+.cover .eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--navy-2)}
+.cover h1{font-size:clamp(28px,4.6vw,44px);font-weight:800;line-height:1.08}
+.cover h1 span{color:var(--navy)}
+.cover .lead{font-size:16.5px;color:var(--ink-2)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));border:2px solid var(--navy);border-top:0}
+.kpi{padding:16px 18px;border-right:1px solid var(--line);border-top:1px solid var(--line);display:grid;gap:2px}
+.kpi:last-child{border-right:0}
+.kpi b{font-family:var(--f-display);font-size:26px;font-weight:800;color:var(--navy);line-height:1.1}
+.kpi b.r{color:var(--alert)}
+.kpi span{font-size:12.5px;color:var(--ink-2);line-height:1.35}
+section.sec{margin-top:32px;border:1.5px solid var(--navy);padding:26px 28px 28px;display:grid;gap:16px}
+.sec-head{display:flex;align-items:baseline;gap:14px;border-bottom:2px solid var(--navy);padding-bottom:12px}
+.sec-head .n{font-family:var(--f-mono);font-size:13px;color:#fff;background:var(--navy);padding:3px 8px;flex:none}
+.sec-head h2{font-size:23px;font-weight:700}
+h3{font-size:17px;font-weight:700;color:var(--navy);margin-top:6px}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px}
+.cols>*{min-width:0}
+.diagram{overflow-x:auto;border:1px solid var(--line);background:var(--blue-6);padding:10px}
+.diagram svg{display:block;min-width:960px;width:100%;height:auto}
+.cap{font-size:13px;color:var(--mute)}
+.tbl{overflow-x:auto;border:1px solid var(--navy)}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th{background:var(--navy);color:#fff;text-align:left;font-weight:600;padding:8px 12px;font-size:12.5px;letter-spacing:.02em;vertical-align:bottom}
+td{padding:8px 12px;border-top:1px solid var(--line);vertical-align:top}
+tr:nth-child(even) td{background:var(--blue-6)}
+td.hl{color:var(--navy-2);font-weight:700}
+td.grp{background:var(--blue-5)!important;font-family:var(--f-display);font-weight:700;color:var(--navy)}
+.pill{display:inline-block;font-family:var(--f-mono);font-size:11px;font-weight:500;padding:2px 7px;color:#fff;white-space:nowrap}
+.p-alta{background:var(--alert)} .p-media{background:var(--warn)} .p-baja{background:var(--navy-2)} .p-ok{background:var(--ok)}
+.callout{border:1.5px solid var(--navy);border-left-width:8px;padding:14px 18px;background:var(--blue-6);display:grid;gap:6px}
+.callout.r{border-color:var(--alert)}
+.callout b{font-family:var(--f-display)}
+code{font-family:var(--f-mono);font-size:.86em;background:var(--blue-6);padding:1px 4px;border:1px solid var(--line)}
+pre{font-family:var(--f-mono);font-size:13px;background:var(--navy);color:#fff;padding:14px 16px;overflow-x:auto;margin:0;line-height:1.6}
+ul.clean{margin:0;padding-left:20px;display:grid;gap:4px}
+footer{margin-top:32px;border-top:2px solid var(--navy);padding-top:12px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;font-size:12.5px;color:var(--mute);font-family:var(--f-mono)}
+@media (max-width:640px){.cover{padding:22px 18px}section.sec{padding:20px 16px}.kpi b{font-size:22px}}
+</style>
+
+<div class="wrap">
+
+<header class="cover">
+  <div class="eyebrow">SRI · Ingeniería de Datos · e-IAD en Microsoft Fabric · primer bloque (0_0 a 4_3)</div>
+  <h1>Revisión del pipeline <span>CIAT-IJUNGLE</span> en Fabric</h1>
+  <p class="lead">Qué mira el algoritmo para decir "esto es una anomalía", cómo está armada la arquitectura y qué hay que ajustar antes de cargar los 12 archivos mensuales.</p>
+</header>
+<div class="kpis">
+  <div class="kpi"><b>21</b><span>notebooks y 2 pipelines comparados con la guía de Microsoft</span></div>
+  <div class="kpi"><b>40+</b><span>criterios por contribuyente que entran al modelo</span></div>
+  <div class="kpi"><b class="r">3</b><span>fallas que afectan la carga mensual (probadas)</span></div>
+  <div class="kpi"><b>5</b><span>notebooks ajustados y probados en Spark</span></div>
+  <div class="kpi"><b>21</b><span>notebooks comparados con las fuentes locales</span></div>
+</div>
+
+<!-- 01 ARQUITECTURA -->
+<section class="sec" id="arquitectura">
+  <div class="sec-head"><span class="n">01</span><h2>Arquitectura de punta a punta</h2></div>
+  <p>El SRI prepara y anonimiza los datos en su PostgreSQL. Fabric los recibe en el Lakehouse <span class="mono">ADSD</span> y los pasa por cinco etapas hasta el puntaje de anomalía. Cada etapa deja tablas Delta con el prefijo <span class="mono">batch_{id}_</span>.</p>
+  <div class="diagram">
+  <svg viewBox="0 0 1100 600" role="img" aria-label="Arquitectura SRI hacia Fabric: ingesta, estándar, calidad, limpieza, red, features, iJungle y salida">
+    <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#0b2a5b"/></marker></defs>
+    <!-- carriles -->
+    <rect x="10" y="10" width="190" height="580" fill="#fff" stroke="#0b2a5b" stroke-width="1.5"/>
+    <text x="22" y="32" font-family="IBM Plex Mono,monospace" font-size="11" fill="#1f4e9c" letter-spacing="1.2">SRI · ON-PREMISE</text>
+    <rect x="215" y="10" width="875" height="580" fill="#fff" stroke="#0b2a5b" stroke-width="1.5"/>
+    <text x="227" y="32" font-family="IBM Plex Mono,monospace" font-size="11" fill="#1f4e9c" letter-spacing="1.2">MICROSOFT FABRIC · LAKEHOUSE ADSD</text>
+    <!-- SRI -->
+    <g font-family="IBM Plex Sans,sans-serif" font-size="12">
+      <rect x="25" y="50" width="160" height="58" fill="#eef3fb" stroke="#0b2a5b"/><text x="35" y="72" font-weight="600">PostgreSQL · ciat</text><text x="35" y="90" font-size="11" fill="#2a3242">168 M facturas 2024</text>
+      <rect x="25" y="130" width="160" height="58" fill="#eef3fb" stroke="#0b2a5b"/><text x="35" y="152" font-weight="600">consultas_ciat.py</text><text x="35" y="170" font-size="11" fill="#2a3242">datasets 1, 2 y 3</text>
+      <rect x="25" y="210" width="160" height="72" fill="#0b2a5b"/><text x="35" y="232" font-weight="600" fill="#fff">exportador.py</text><text x="35" y="250" font-size="11" fill="#dbe6f6">vaso v2 · 10 mil emisores</text><text x="35" y="266" font-size="11" fill="#dbe6f6">anonimización v3</text>
+      <rect x="25" y="304" width="160" height="96" fill="#fff" stroke="#0b2a5b" stroke-width="2"/><text x="35" y="326" font-weight="600">CSV con coma</text>
+      <text x="35" y="346" font-size="11" font-family="IBM Plex Mono,monospace">invoicing5mill</text><text x="35" y="362" font-size="11" font-family="IBM Plex Mono,monospace">taxpayer5mill</text><text x="35" y="378" font-size="11" font-family="IBM Plex Mono,monospace">+ 12 meses c/u</text><text x="35" y="394" font-size="11" font-family="IBM Plex Mono,monospace">+ 150k</text>
+      <rect x="25" y="420" width="160" height="58" fill="#fff" stroke="#0b2a5b" stroke-dasharray="5 3"/><text x="35" y="442" font-weight="600">tipos de cambio</text><text x="35" y="460" font-size="11" fill="#2a3242">→ lo usa 3_1 (USD = 1)</text>
+      <rect x="25" y="500" width="160" height="72" fill="#fff" stroke="#0b2a5b" stroke-dasharray="5 3"/><text x="35" y="522" font-weight="600">mapeo de nombres</text><text x="35" y="540" font-size="11" fill="#2a3242">JSON SRI → ADSD</text><text x="35" y="556" font-size="11" fill="#2a3242">→ lo usan 1_1 y 1_2</text>
+    </g>
+    <!-- etapas fabric: fila 1 -->
+    <g font-family="IBM Plex Sans,sans-serif" font-size="11.5">
+      <!-- E1 -->
+      <text x="232" y="62" font-family="IBM Plex Mono,monospace" font-size="10.5" fill="#1f4e9c">1 · INGESTA</text>
+      <rect x="230" y="70" width="150" height="40" fill="#eef3fb" stroke="#0b2a5b"/><text x="240" y="94">0_0 carpetas</text>
+      <rect x="230" y="118" width="150" height="40" fill="#eef3fb" stroke="#0b2a5b"/><text x="240" y="142">1_0 descomprimir zip</text>
+      <!-- E2 -->
+      <text x="402" y="62" font-family="IBM Plex Mono,monospace" font-size="10.5" fill="#1f4e9c">2 · ESQUEMA ESTÁNDAR</text>
+      <rect x="400" y="70" width="160" height="40" fill="#fff" stroke="#b3362a" stroke-width="2"/><text x="410" y="94">1_1 facturas → ADSD</text>
+      <rect x="400" y="118" width="160" height="40" fill="#fff" stroke="#b3362a" stroke-width="2"/><text x="410" y="142">1_2 perfiles → ADSD</text>
+      <!-- E3 -->
+      <text x="582" y="62" font-family="IBM Plex Mono,monospace" font-size="10.5" fill="#1f4e9c">3 · CALIDAD</text>
+      <rect x="580" y="70" width="160" height="40" fill="#fff" stroke="#b3362a" stroke-width="2"/><text x="590" y="94">1_3 estadísticas</text>
+      <rect x="580" y="118" width="160" height="40" fill="#eef3fb" stroke="#0b2a5b"/><text x="590" y="137">2_1 índices de calidad</text><text x="590" y="151" font-size="10" fill="#2a3242">SQi · Ci · xRefi · DQi</text>
+      <rect x="580" y="166" width="160" height="40" fill="#eef3fb" stroke="#0b2a5b"/><text x="590" y="190">3_3 stats de perfiles</text>
+      <!-- E4 -->
+      <text x="762" y="62" font-family="IBM Plex Mono,monospace" font-size="10.5" fill="#1f4e9c">4 · LIMPIEZA</text>
+      <rect x="760" y="70" width="150" height="40" fill="#fff" stroke="#b3362a" stroke-width="2"/><text x="770" y="89">3_1 facturas</text><text x="770" y="103" font-size="10" fill="#2a3242">+ tipo de cambio</text>
+      <rect x="760" y="118" width="150" height="40" fill="#eef3fb" stroke="#0b2a5b"/><text x="770" y="142">3_2 perfiles</text>
+      <rect x="930" y="70" width="145" height="88" fill="#0b2a5b"/><text x="940" y="94" fill="#fff" font-weight="600">Delta</text><text x="940" y="112" fill="#dbe6f6" font-size="10.5">_cleaned_data</text><text x="940" y="128" fill="#dbe6f6" font-size="10.5">_entity_cleaned_data</text><text x="940" y="144" fill="#dbe6f6" font-size="10.5">_master_adsd_table</text>
+    </g>
+    <!-- fila 2 -->
+    <g font-family="IBM Plex Sans,sans-serif" font-size="11.5">
+      <text x="232" y="262" font-family="IBM Plex Mono,monospace" font-size="10.5" fill="#1f4e9c">5 · RED DE FACTURACIÓN</text>
+      <rect x="230" y="270" width="160" height="40" fill="#fff" stroke="#b3362a" stroke-width="2"/><text x="240" y="289">4_1 aristas</text><text x="240" y="303" font-size="10" fill="#2a3242">red de facturas + heatmap</text>
+      <rect x="230" y="318" width="160" height="40" fill="#eef3fb" stroke="#0b2a5b"/><text x="240" y="337">4_2 PageRank</text><text x="240" y="351" font-size="10" fill="#2a3242">Scala · GraphX</text>
+      <text x="422" y="262" font-family="IBM Plex Mono,monospace" font-size="10.5" fill="#1f4e9c">6 · FEATURES</text>
+      <rect x="420" y="270" width="180" height="88" fill="#eef3fb" stroke="#0b2a5b"/><text x="430" y="292" font-weight="600">4_3 crear features</text><text x="430" y="310" font-size="10.5" fill="#2a3242">por contribuyente y periodo</text><text x="430" y="326" font-size="10.5" fill="#2a3242">hora · día · semana · mes</text><text x="430" y="342" font-size="10.5" fill="#2a3242">trimestre · año</text>
+      <text x="632" y="262" font-family="IBM Plex Mono,monospace" font-size="10.5" fill="#1f4e9c">7 · iJUNGLE</text>
+      <rect x="630" y="270" width="200" height="190" fill="#fff" stroke="#0b2a5b" stroke-width="2" stroke-dasharray="6 3"/>
+      <text x="642" y="292">5_1 ingeniería común</text><text x="642" y="314">5_2 entrenar iForest</text><text x="642" y="336">5_3 overhead</text><text x="642" y="358">5_4 mejor iForest</text><text x="642" y="380">5_5 predecir anomalías</text><text x="642" y="402">5_6_1 subconjunto</text><text x="642" y="424">5_6 interpretar</text><text x="642" y="446" font-size="10.5" fill="#5a6578">revisados · en fuentes locales v2</text>
+      <text x="862" y="262" font-family="IBM Plex Mono,monospace" font-size="10.5" fill="#1f4e9c">8 · SALIDA</text>
+      <rect x="860" y="270" width="215" height="40" fill="#eef3fb" stroke="#0b2a5b"/><text x="870" y="294">5_7 renombrar a nombres SRI</text>
+      <rect x="860" y="318" width="215" height="40" fill="#eef3fb" stroke="#0b2a5b"/><text x="870" y="342">10 estado del batch</text>
+      <rect x="860" y="366" width="215" height="58" fill="#0b2a5b"/><text x="870" y="390" fill="#fff" font-weight="600">Power BI / PowerPoint</text><text x="870" y="408" fill="#dbe6f6" font-size="10.5">score por emisor y periodo</text>
+    </g>
+    <!-- leyenda -->
+    <g font-family="IBM Plex Sans,sans-serif" font-size="11">
+      <rect x="230" y="520" width="14" height="14" fill="#fff" stroke="#b3362a" stroke-width="2"/><text x="252" y="532">ajustado en esta revisión</text>
+      <rect x="420" y="520" width="14" height="14" fill="#fff" stroke="#0b2a5b" stroke-dasharray="4 2"/><text x="442" y="532">modelo iJungle (5_1 a 5_6)</text>
+      <rect x="650" y="520" width="14" height="14" fill="#0b2a5b"/><text x="672" y="532">tablas Delta / salida</text>
+    </g>
+    <!-- flechas -->
+    <g stroke="#0b2a5b" stroke-width="1.8" fill="none" marker-end="url(#a)">
+      <path d="M105,108 L105,128"/><path d="M105,188 L105,208"/><path d="M105,282 L105,302"/>
+      <path d="M185,350 C205,350 205,140 228,138"/>
+      <path d="M380,90 L398,90"/><path d="M380,138 L398,138"/>
+      <path d="M560,90 L578,90"/><path d="M560,138 L578,138"/>
+      <path d="M740,90 L758,90"/><path d="M740,138 L758,138"/>
+      <path d="M910,114 L928,114"/>
+      <path d="M1000,158 C1000,220 310,210 310,268"/>
+      <path d="M390,314 L418,314"/><path d="M310,310 L310,316"/>
+      <path d="M600,314 L628,314"/><path d="M830,290 L858,290"/><path d="M967,310 L967,316"/><path d="M967,358 L967,364"/>
+    </g>
+  </svg>
+  </div>
+  <p class="cap">Los recuadros con borde rojo son los cinco notebooks que ajusté. El tipo de cambio y el mapeo de nombres son archivos de configuración que entran en 3_1 y en 1_1/1_2.</p>
+</section>
+
+<!-- 02 CRITERIOS -->
+<section class="sec" id="criterios">
+  <div class="sec-head"><span class="n">02</span><h2>Qué mira el algoritmo para marcar una anomalía</h2></div>
+  <p>El modelo no usa una regla fija. Para cada contribuyente y cada periodo arma un perfil de más de 40 medidas. Luego un bosque de aislamiento (iForest, en la variante iJungle) marca como anomalía al que queda <b>aislado con pocos cortes</b>: el que se ve distinto al resto en varias medidas a la vez.</p>
+  <p>La cantidad facturada es solo una de esas medidas. Estas son las demás, agrupadas por lo que miden.</p>
+  <div class="tbl"><table>
+    <thead><tr><th style="width:24%">Criterio</th><th>Qué se calcula (4_3)</th><th style="width:26%">Cuándo se ve raro</th></tr></thead>
+    <tbody>
+      <tr><td class="grp" colspan="3">A · Volumen y montos del periodo</td></tr>
+      <tr><td>Número de facturas</td><td><code>number_of_transactions</code>, <code>num_days_issuing_period</code></td><td>muchas facturas en pocos días</td></tr>
+      <tr><td>Montos facturados</td><td>suma de base gravada, base 0 %, ventas, descuentos, total e IVA</td><td>montos fuera de escala para su tamaño</td></tr>
+      <tr><td>Factura mínima y máxima</td><td>min/max de total e IVA en el periodo y en todo el año</td><td>una factura enorme aislada</td></tr>
+      <tr><td>Promedios mensual y diario</td><td>promedio mensual y diario de total e IVA</td><td>picos frente a su propio promedio</td></tr>
+      <tr><td>Cierre de año</td><td><code>week4_month12_*</code>: lo facturado en la última semana de diciembre</td><td>facturación concentrada al cierre</td></tr>
+      <tr><td class="grp" colspan="3">B · Con quién se relaciona</td></tr>
+      <tr><td>Clientes distintos</td><td><code>total_entity_subtarget</code>, promedio mensual de clientes</td><td>muchos clientes nuevos de golpe, o uno solo</td></tr>
+      <tr><td>Proveedores y compras</td><td>veces que aparece como comprador, proveedores distintos, monto comprado</td><td>vende mucho y casi no compra</td></tr>
+      <tr><td>Autofacturación</td><td>facturas y monto donde emisor = comprador</td><td>se factura a sí mismo</td></tr>
+      <tr><td class="grp" colspan="3">C · Posición en la red de facturación</td></tr>
+      <tr><td>Centralidad</td><td><code>pagerank_score</code> (4_2) sobre el grafo vendedor → comprador</td><td>nodo pequeño con centralidad alta</td></tr>
+      <tr><td>Profundidad en la cadena</td><td>distancia mínima y máxima al inicio y al final de la cadena, lugar en la red (4_3)</td><td>intermediario en cadenas largas</td></tr>
+      <tr><td class="grp" colspan="3">D · Razones (lo que debería cuadrar)</td></tr>
+      <tr><td>Ventas / compras</td><td><code>ratio_item_spec_value_q02_entity_c_value</code></td><td>vende muchísimo más de lo que compra</td></tr>
+      <tr><td>IVA / ventas</td><td><code>ratio_item_spec_tax_q01_item_spec_value_q02</code></td><td>tasa efectiva que no cuadra</td></tr>
+      <tr><td>Ventas por empleado</td><td>ventas / <code>employees_number</code></td><td>mucha venta con 0 o 1 empleado</td></tr>
+      <tr><td>Ventas del año / capital social</td><td>ventas del año / <code>social_capital</code></td><td>factura muy por encima de su capital</td></tr>
+      <tr><td>Clientes / proveedores y entradas / salidas</td><td><code>ratio_total_entity_subtarget_total_entity_c_entities</code>, <code>ratio_in_out</code></td><td>desequilibrio fuerte</td></tr>
+      <tr><td class="grp" colspan="3">E · Perfil y antigüedad</td></tr>
+      <tr><td>Tiempo hasta facturar</td><td>días entre la inscripción en el RUC (y la certificación de e-factura) y la primera factura</td><td>empresa recién inscrita que factura mucho</td></tr>
+      <tr><td>Datos del perfil</td><td>los 25 campos de taxpayer: tamaño, régimen, activos, patrimonio, ingresos, crédito de IVA, ubicación</td><td>combinaciones poco comunes</td></tr>
+      <tr><td>Actividades</td><td>las 5 actividades con más venta (<code>segment_01..05</code>)</td><td>vende en actividades ajenas a su giro</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Hiperparámetros que controlan esos criterios</h3>
+  <p>Valores por defecto del pipeline <span class="mono">2_main_data_load</span> de Fabric (los mismos de la guía de Microsoft) frente a los de tu <span class="mono">eiad_config.py</span>. En azul, lo que cambia.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Hiperparámetro</th><th>Dónde</th><th>Qué controla</th><th>Fabric</th><th>tus fuentes</th></tr></thead>
+    <tbody>
+      <tr><td class="grp" colspan="5">Preparación de datos</td></tr>
+      <tr><td><code>time_slice_list</code></td><td>4_3</td><td>Periodos en que se arma el perfil. Un modelo por periodo. La guía permite también <span class="mono">by_hour</span>, pero no viene activado.</td><td>day, week, month, quarter, year</td><td>igual</td></tr>
+      <tr><td><code>depth_of_supply_chain_max_iter</code></td><td>4_3</td><td>Cuántos saltos se recorren en la cadena para medir la profundidad.</td><td>10</td><td>10</td></tr>
+      <tr><td>tolerancia de PageRank</td><td>4_2</td><td>Precisión del cálculo de centralidad.</td><td>0.1 (fijo)</td><td>10 iteraciones</td></tr>
+      <tr><td><code>drop_records_threshold</code></td><td>3_1</td><td>Si los nulos de un campo clave están bajo este %, se borran esas filas.</td><td>0.01</td><td>0.01</td></tr>
+      <tr><td><code>local_currency_iso_code</code></td><td>3_1</td><td>Moneda a la que se convierten los montos.</td><td>EUR</td><td class="hl">USD</td></tr>
+      <tr><td><code>first_year</code></td><td>3_1</td><td>Descarta facturas anteriores a ese año.</td><td>1950</td><td>1950</td></tr>
+      <tr><td><code>data_quality_min/max_date</code></td><td>2_1</td><td>Rango de fechas esperado para el SQi.</td><td>01-01-2021 / 31-12-2021</td><td class="hl">01-01-2024 / 31-12-2024</td></tr>
+      <tr><td><code>date_feat</code> · <code>id_feat</code></td><td>5_1</td><td>Fecha del periodo y columnas que identifican la fila sin entrar al modelo.</td><td class="mono">transaction_date01 · entity_target_id_indexed</td><td class="mono">fecha_periodo · issuer_id</td></tr>
+      <tr><td class="grp" colspan="5">Modelo iJungle (5_1 a 5_6)</td></tr>
+      <tr><td><code>allowed_null_pct</code></td><td>5_1</td><td>Una medida con más nulos que este % no entra al modelo.</td><td>0.051</td><td>0.051</td></tr>
+      <tr><td><code>trees_list</code></td><td>5_2</td><td>Árboles por bosque que se prueban.</td><td>500, 100, 20, 10</td><td>igual</td></tr>
+      <tr><td><code>subsample_list</code></td><td>5_2</td><td>Filas por bosque. La muestra se parte en grupos de ese tamaño: un bosque por grupo.</td><td>4096, 2048, 1024, 512</td><td>igual</td></tr>
+      <tr><td><code>train_size</code></td><td>5_2</td><td>Fracción de filas (contribuyente × periodo) usada para entrenar. La guía pide que no pase de 10 millones de filas.</td><td>0.5</td><td class="hl">0.001, con piso de 5 000 y techo de 200 000 filas</td></tr>
+      <tr><td><code>overhead_size</code></td><td>5_3</td><td>Fracción donde se comparan todos los bosques.</td><td>0.5</td><td class="hl">0.001, mismo piso y techo</td></tr>
+      <tr><td>tope de grupos</td><td>5_2</td><td>Bosques por combinación de la grilla.</td><td>sin tope</td><td class="hl">25</td></tr>
+      <tr><td>criterio de elección</td><td>5_4</td><td>Gana el bosque con menor suma de residuos al cuadrado frente al puntaje promedio: el más representativo.</td><td>mínima SSR</td><td>igual</td></tr>
+      <tr><td><code>seed</code></td><td>5_2–5_3</td><td>Semilla para que la corrida sea repetible.</td><td>42</td><td>42</td></tr>
+      <tr><td><code>number_of_interpret_features</code></td><td>5_6</td><td>Medidas que explican cada anomalía (SHAP, escaladas para sumar el score).</td><td>10</td><td>10</td></tr>
+      <tr><td><code>score_threshold</code></td><td>5_6 · exportador</td><td>Score (de −1 a 0, más negativo = más raro) desde el cual se explica la anomalía.</td><td>−0.75</td><td>−0.75</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout r">
+    <b>Ojo al leer las anomalías: fechas centinela</b>
+    <p>Cuando un contribuyente no tiene fecha de inscripción o de certificación, el diccionario pide <code>1900-01-01</code>. El criterio "tiempo hasta facturar" mide entonces unos 45 mil días, y el modelo lo marcará como raro aunque no lo sea. En la interpretación (5_6), si una anomalía la explica sobre todo <code>time_to_submit_reg</code> o <code>time_to_submit_enroll</code>, revisen primero si su fecha es 1900.</p>
+  </div>
+</section>
+
+<!-- 03 MAPEO -->
+<section class="sec" id="mapeo">
+  <div class="sec-head"><span class="n">03</span><h2>Cómo se llaman nuestros campos dentro de Fabric</h2></div>
+  <p>Fabric trabaja con nombres genéricos (ADSD). Esta es la equivalencia según el orden de columnas de nuestros CSV. El mapeo oficial está en el JSON <span class="mono">specific_domain_naming</span>, así que conviene confirmarla contra ese archivo.</p>
+  <div class="cols">
+    <div class="tbl"><table>
+      <thead><tr><th>invoicing (SRI)</th><th>ADSD</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">issuer_type</td><td class="mono">main_operation_type</td></tr>
+        <tr><td class="mono">issuer_id</td><td class="mono">entity_target_id</td></tr>
+        <tr><td class="mono">activity_issuer</td><td class="mono">segment_group</td></tr>
+        <tr><td class="mono">receiver_type</td><td class="mono">entity_c_id</td></tr>
+        <tr><td class="mono">receiver_id</td><td class="mono">entity_subtarget_id</td></tr>
+        <tr><td class="mono">document_type · document_id</td><td class="mono">document_type · document_id</td></tr>
+        <tr><td class="mono">issued_date</td><td class="mono">transaction_date01</td></tr>
+        <tr><td class="mono">sales_terms · credit_term</td><td class="mono">entity_c_name · tax_rate01</td></tr>
+        <tr><td class="mono">currency · exchange_rate_r</td><td class="mono">currency01 · exchange_rate_main</td></tr>
+        <tr><td class="mono">payment_method1..5, 99</td><td class="mono">payment_type01, transaction_reference_a, tax_type01, transaction_origin, item_code01, item_description01</td></tr>
+        <tr><td class="mono">total_taxable / non_taxable services</td><td class="mono">item_spec_volume_q01 / q02</td></tr>
+        <tr><td class="mono">total_taxable / non_taxable goods</td><td class="mono">item_spec_volume_q05 / q03</td></tr>
+        <tr><td class="mono">total_taxable · total_non_taxable</td><td class="mono">item_spec_volume_q06 · item_spec_value_q01</td></tr>
+        <tr><td class="mono">total_sales · total_discounts</td><td class="mono">item_spec_value_q02 · item_spec_volume_q04</td></tr>
+        <tr><td class="mono">total_voucher · total_tax</td><td class="mono">item_spec_price_q01 · item_spec_tax_q01</td></tr>
+      </tbody>
+    </table></div>
+    <div class="tbl"><table>
+      <thead><tr><th>taxpayer (SRI)</th><th>ADSD</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">taxpayer_id · taxpayer_type</td><td class="mono">entity_profile_target_id · entity_target_type_c01</td></tr>
+        <tr><td class="mono">fiscal_condition · regime_name · taxpayer_size</td><td class="mono">entity_target_tax_spec_c01 · c02 · c03</td></tr>
+        <tr><td class="mono">main / sec1 / sec2_activity</td><td class="mono">entity_target_tax_spec_c04 · c05 · c06</td></tr>
+        <tr><td class="mono">employees_number</td><td class="mono">entity_target_spec_q01</td></tr>
+        <tr><td class="mono">legal_reg · tax_reg · e_inv_enroll_date</td><td class="mono">entity_target_date_01 · 02 · 03</td></tr>
+        <tr><td class="mono">reported_assets</td><td class="mono">entity_target_spec_q02</td></tr>
+        <tr><td class="mono">total_capital · social_capital</td><td class="mono">entity_target_spec_q03 · q04</td></tr>
+        <tr><td class="mono">total_assets · fixed_assets · liabilities</td><td class="mono">entity_target_spec_q05 · q06 · q07</td></tr>
+        <tr><td class="mono">gross_income · net_income</td><td class="mono">entity_target_spec_q08 · q09</td></tr>
+        <tr><td class="mono">total_vat_sales · credited_einvoicing_value</td><td class="mono">entity_target_spec_q10 · q11</td></tr>
+        <tr><td class="mono">state · municipality · city</td><td class="mono">entity_target_spec_g01 · g02 · g03</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</section>
+
+<!-- 04 COMPARACION Y HALLAZGOS -->
+<section class="sec" id="hallazgos">
+  <div class="sec-head"><span class="n">04</span><h2>Qué cambió y qué hay que ajustar</h2></div>
+  <p>Lo que muestra el código de los notebooks sobre la adaptación de Microsoft a Fabric (la comparación completa contra la versión inicial está en la sección 05):</p>
+  <ul class="clean">
+    <li>Todas las salidas pasaron de archivos parquet en ADLS a <b>tablas Delta</b> (<span class="mono">saveAsTable</span>). Las líneas de parquet quedaron comentadas.</li>
+    <li>El índice de contribuyentes de <span class="mono">StringIndexer</span> se reemplazó por una tabla de vocabulario en Delta (<span class="mono">_working_entity_id_vocab</span>), con la misma regla de orden.</li>
+    <li>Se agregaron la tabla <span class="mono">master_adsd_table</span> particionada por año y mes para Power BI, y el registro <span class="mono">batch_status</span>.</li>
+    <li>Las columnas usan nombres genéricos ADSD y se traducen con un JSON de mapeo.</li>
+  </ul>
+  <p>Ninguno de esos cambios toca el cálculo de los criterios. Al revisar el código sí encontré estos problemas:</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Nivel</th><th>Notebook</th><th>Problema</th><th>Efecto</th><th>Estado</th></tr></thead>
+    <tbody>
+      <tr><td><span class="pill p-alta">alto</span></td><td class="mono">1_2</td><td>Cada archivo de taxpayer se escribe con <code>overwrite</code>: solo sobrevive el último.</td><td>Con los 12 taxpayer mensuales quedaría solo diciembre. Bajan el cruce xRefi y los criterios de perfil.</td><td><span class="pill p-ok">ajustado</span> el primero sobrescribe, el resto se agrega y se quitan duplicados</td></tr>
+      <tr><td><span class="pill p-alta">alto</span></td><td class="mono">1_3</td><td>El mes se toma de <code>nombre.split('-')[2]</code> y <code>[3]</code>.</td><td>Con <span class="mono">invoicing5mill_2024-01.csv</span> se cae con <code>IndexError</code>.</td><td><span class="pill p-ok">ajustado</span> conserva la regla original y si no aplica busca AAAA-MM</td></tr>
+      <tr><td><span class="pill p-alta">alto</span></td><td class="mono">1_1</td><td>El pipeline cuenta las facturas como tipo <code>A</code>; el diccionario CIAT manda <code>I</code>.</td><td><span class="mono">num_documentTypeA</span> y <span class="mono">total_document_typeA</span> salen en 0. En la presentación se verían 0 facturas.</td><td><span class="pill p-ok">ajustado</span> se traduce I → A al cargar</td></tr>
+      <tr><td><span class="pill p-media">medio</span></td><td class="mono">3_1</td><td><code>df.na.drop(...)</code> no se asigna, y el filtro de fecha usa el % de otro campo.</td><td>No borra los nulos de emisor ni de fecha (en nuestros datos no hay).</td><td><span class="pill p-ok">ajustado</span></td></tr>
+      <tr><td><span class="pill p-media">medio</span></td><td class="mono">1_1</td><td>Solo quitaba la extensión <code>.CSV</code> en mayúsculas.</td><td>Las carpetas quedaban como <span class="mono">…csv</span>.</td><td><span class="pill p-ok">ajustado</span></td></tr>
+      <tr><td><span class="pill p-baja">bajo</span></td><td class="mono">4_1</td><td>El heatmap solo acepta actividades de 10 a 99.</td><td>Una actividad que empiece en 0 (sección A, agricultura) daría <code>KeyError</code>.</td><td><span class="pill p-ok">ajustado</span> esas filas se omiten solo del heatmap</td></tr>
+      <tr><td><span class="pill p-media">medio</span></td><td class="mono">4_3</td><td>Los promedios mensuales y diarios usan <code>Window.orderBy('date')</code> sin separar por contribuyente.</td><td>El relleno de meses sin actividad toma fechas de otros contribuyentes, así que los promedios mensuales pueden quedar mal. También manda todo a una sola partición.</td><td><span class="pill p-media">sin cambiar</span> cambia el modelo; decidirlo con el CIAT</td></tr>
+      <tr><td><span class="pill p-baja">bajo</span></td><td class="mono">1_1, 3_1</td><td>Se lee con <code>inferSchema=True</code>.</td><td>Si <span class="mono">document_id</span> pasa de 18 dígitos, Spark lo lee como decimal y puede salir en notación científica.</td><td><span class="pill p-baja">verificar</span></td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout">
+    <b>¿Hay que volver a correr?</b>
+    <p>La corrida que ya hicieron sirve si subieron <b>un solo archivo de taxpayer</b> con nombres que tengan el formato <span class="mono">X-X-MM-AAAA</span>. En ese caso lo único malo es el conteo de facturas tipo A en 0. Eso afecta las estadísticas y los gráficos, no el puntaje: el modelo cuenta las facturas con <span class="mono">number_of_transactions</span>.</p>
+    <p>Para la carga de los <b>12 archivos mensuales</b> sí hay que usar los cinco notebooks ajustados. Con los originales, 1_3 se cae y 1_2 se queda con un solo mes de perfiles.</p>
+  </div>
+  <h3>Cómo lo probé</h3>
+  <p>Corrí 1_1, 1_2 y 1_3, originales y ajustados, en Spark 3.5 local con dos facturas mensuales y dos taxpayer mensuales que comparten un contribuyente:</p>
+  <pre>                 original                      ajustado
+1_1 document_type  ['I']                         ['A']
+1_2 perfiles       2 de 3 (se perdió enero)      3 de 3, sin duplicados
+1_3 mes            IndexError                    '01 - 2024', '02 - 2024'</pre>
+</section>
+
+<!-- 05 INICIAL VS FABRIC -->
+<section class="sec" id="versiones">
+  <div class="sec-head"><span class="n">05</span><h2>Versión inicial (Synapse) frente a la nueva (Fabric)</h2></div>
+  <p>Es una comparación solo para documentar. Tus fuentes se armaron sobre la versión inicial y ya tienen los cambios de la nueva. La última columna dice dónde quedó cada punto en tu versión local.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Tema</th><th>Versión inicial (guía Synapse)</th><th>Versión nueva (Fabric)</th><th>En tus fuentes</th></tr></thead>
+    <tbody>
+      <tr><td class="grp" colspan="4">Plataforma</td></tr>
+      <tr><td>Cómputo y almacenamiento</td><td>Azure Synapse, Spark Pools, ADLS Gen2 con contenedores input / working / model / output, Log Analytics</td><td>Un solo Lakehouse en OneLake, Spark y pipelines de Fabric, monitoreo incluido</td><td>Spark 4.2 Connect en Windows 11 y PostgreSQL 18, sin nube</td></tr>
+      <tr><td>Salidas</td><td>Parquet por lote</td><td>Tablas Delta (<span class="mono">saveAsTable</span>) y <span class="mono">master_adsd_table</span> por año y mes</td><td>Parquet en <span class="mono">working/</span> y tablas <span class="mono">eiad_*</span> en Postgres, más los TXT</td></tr>
+      <tr><td>Power BI</td><td>Direct Query al SQL serverless de Synapse; tablas con prefijo de lote</td><td>SQL endpoint del Lakehouse; el lote se toma de <span class="mono">batch_status</span></td><td>No aplica: los resultados quedan en Postgres</td></tr>
+      <tr><td>Costo</td><td>Por servicio de Azure</td><td>Capacidad F. Producción mínima F64, unos 8 000 USD al mes, más Power BI Pro por usuario</td><td>Sin costo de nube</td></tr>
+      <tr><td class="grp" colspan="4">Orquestación</td></tr>
+      <tr><td>Flujo</td><td>Pipeline de Synapse</td><td><span class="mono">2_main_data_load</span> → <span class="mono">1_main_data_science_pipe</span>: 4_1 → 4_2 → 4_3 → por cada periodo 5_1 a 5_6 → 5_6_1 una sola vez → 10_update_batch_status → renombrado por dominio</td><td><span class="mono">run_eiad.py</span> hace lo mismo en un proceso; 5_6_1 sale como <span class="mono">top1000_by_year</span></td></tr>
+      <tr><td>Defecto en el pipeline</td><td>—</td><td><span class="mono">page_rank_path</span> recibe el valor de <span class="mono">overhead_size</span>. No rompe nada porque 4_2 y 4_3 ya usan tablas Delta y esas rutas quedaron comentadas</td><td>No aplica: la ruta se arma en <span class="mono">eiad_config.py</span></td></tr>
+      <tr><td class="grp" colspan="4">Datos de entrada</td></tr>
+      <tr><td>Nombres de campos</td><td>Propios de facturación (<span class="mono">issuer_id</span>, <span class="mono">issued_date</span>)</td><td>Genéricos ADSD (<span class="mono">entity_target_id</span>, <span class="mono">transaction_date01</span>) más un JSON de mapeo por dominio. Se agregó el esquema de aduanas 1.1</td><td>Nombres de facturación del SRI: el mapeo no hace falta</td></tr>
+      <tr><td>Archivos</td><td>CSV en ZIP con nombre <span class="mono">DS-BIZS-MM-AAAA-desc</span>, perfil y archivo de tipo de cambio</td><td>Igual</td><td>Se lee directo de <span class="mono">ciat.consulta1</span> y <span class="mono">consulta2</span>; tipo de cambio 1</td></tr>
+      <tr><td class="grp" colspan="4">Calidad y limpieza</td></tr>
+      <tr><td>Ci (completitud)</td><td>Nulos ≤1 % → 0.9 · ≤2 % → 0.5 · ≤3 % → 0.25 · más → 0</td><td>El código de 2_1 no tiene el tramo del 3 %: más de 2 % → 0.25</td><td>Sigue al código de 2_1</td></tr>
+      <tr><td>SQi fuera de rango por arriba</td><td>Cortes en 0.1 %, 0.5 % y 1.5 %</td><td>El código usa 1 %, 2 % y 5 %, iguales al de por debajo</td><td>Sigue al código de 2_1</td></tr>
+      <tr><td>Tipo de documento nulo</td><td>Se reemplaza por <span class="mono">I</span></td><td>Igual, pero 4_3 solo cuenta A a E</td><td><span class="mono">I</span> cuenta como A</td></tr>
+      <tr><td>Nulos del perfil</td><td>Montos → 1.0 · fechas → 1900-01-01 · textos → <span class="mono">no_…</span></td><td>Igual (3_2)</td><td class="hl">Solo se rellenan tipo y actividades. Ver la nota de abajo</td></tr>
+      <tr><td class="grp" colspan="4">Modelo</td></tr>
+      <tr><td>Medidas</td><td>Más de 90, en seis periodos (con hora)</td><td>Las mismas, en cinco periodos por defecto</td><td>100 medidas por periodo (v2)</td></tr>
+      <tr><td>iJungle y explicación</td><td>Grilla de bosques, mínima SSR, SHAP top 10</td><td>Igual</td><td>Igual, con respaldo z-robusto si no hay <span class="mono">shap</span></td></tr>
+      <tr><td>Alcance</td><td colspan="2">Marca contribuyentes raros en un periodo, no facturas. Una anomalía no es fraude: la debe revisar una persona</td><td>Igual</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout r">
+    <b>El único punto que cambia resultados: nulos del perfil</b>
+    <p>En Fabric, 3_2 rellena los campos vacíos del perfil antes del modelo. Así el patrimonio, los activos o las fechas nunca superan el 5.1 % de nulos y siempre entran. En tus fuentes, <span class="mono">step3_cleansing</span> deja vacíos los montos y las fechas del perfil. Si en <span class="mono">consulta2</span> más del 5.1 % de los contribuyentes no tiene, por ejemplo, patrimonio, la v2 descarta esa medida. El log lo avisa con la línea <span class="mono">medidas descartadas por nulos</span>.</p>
+    <p>Las dos opciones tienen sentido. Si se deja así, el modelo no aprende de valores inventados. Si se rellena como Fabric, se conservan las medidas del perfil, pero vuelve el problema de la fecha 1900 explicado en la sección 02.</p>
+  </div>
+</section>
+
+<footer>
+  <span>Revisión e-IAD Fabric · Jimmy González · SRI</span>
+  <span>notebooks 0_0 a 5_7 · pipelines 1 y 2 · guía ADSD de Microsoft</span>
+</footer>
+</div>
+
+</body></html>
