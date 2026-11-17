@@ -1,0 +1,498 @@
+<!DOCTYPE html><html lang='es'><head><meta charset='utf-8'>
+<title>Validación e-IAD v3 (Enriquecida)</title>
+<script src='echarts.min.js'></script>
+<script>var ECHARTS_PENDING={};var ECHARTS_DONE={};</script>
+<style>
+body{font-family:'Segoe UI',Arial,sans-serif;margin:0;background:#f2f5f7;color:#1c2833}
+header{background:#123c5b;color:#fff;padding:26px 30px}
+header h1{margin:0;font-size:22px}
+header p{margin:4px 0 0;font-size:13px;color:#bcd3e2}
+.cont{max-width:1320px;margin:0 auto;padding:20px 24px 60px}
+h3{color:#1b5a86;font-size:15px;margin-bottom:6px}
+.card{background:#fff;border:1px solid #dbe3e8;border-radius:8px;padding:16px 18px;margin:14px 0;
+      box-shadow:0 1px 3px rgba(18,60,91,.08)}
+table.data{border-collapse:collapse;width:100%;background:#fff;font-size:12.5px}
+table.data th{background:#123c5b;color:#fff;text-align:left;padding:7px 9px;font-weight:600}
+table.data td{padding:6px 9px;border-bottom:1px solid #e7edf1;vertical-align:top}
+table.data tr:nth-child(even){background:#f6f9fb}
+.badge{display:inline-block;padding:2px 9px;border-radius:11px;font-size:11px;font-weight:600}
+.b-rojo{background:#fdecea;color:#b71c1c}
+.b-ambar{background:#fff8e1;color:#9c6500}
+.b-azul{background:#e3f2fd;color:#0d47a1}
+.b-gris{background:#eceff1;color:#546e7a}
+.b-verde{background:#e8f5e9;color:#2e7d32}
+.tabbtn{background:#dce7ee;border:none;border-radius:6px 6px 0 0;padding:8px 16px;margin-right:4px;
+        cursor:pointer;font-size:13px;font-weight:600;color:#123c5b}
+.tabbtn.activo{background:#123c5b;color:#fff}
+.panel{display:none;background:#fff;border:1px solid #dbe3e8;border-radius:0 8px 8px 8px;padding:14px}
+.nota{background:#eef5fa;border-left:4px solid #1b5a86;padding:10px 14px;border-radius:0 6px 6px 0;
+      font-size:13.5px;margin:10px 0}
+.mono{font-family:Consolas,monospace;font-size:12px}
+details.sec{background:#fff;border:1px solid #dbe3e8;border-radius:8px;margin:14px 0;
+      box-shadow:0 1px 3px rgba(18,60,91,.08);overflow:hidden}
+details.sec>summary{cursor:pointer;list-style:none;padding:14px 18px;font-size:16.5px;
+      font-weight:600;color:#123c5b;background:#eef4f8;border-bottom:1px solid #dbe3e8;
+      display:flex;align-items:center;gap:10px;user-select:none}
+details.sec>summary::-webkit-details-marker{display:none}
+details.sec>summary::before{content:'\25B6';font-size:11px;color:#1b5a86;transition:transform .15s}
+details.sec[open]>summary::before{transform:rotate(90deg)}
+details.sec>summary .chip{margin-left:auto;font-size:12px;font-weight:600;background:#123c5b;
+      color:#fff;border-radius:11px;padding:2px 10px}
+details.sec .secbody{padding:16px 18px}
+.kpi{display:inline-block;background:#f6f9fb;border:1px solid #dbe3e8;border-radius:8px;
+     padding:10px 16px;margin:4px 8px 4px 0;text-align:center}
+.kpi b{display:block;font-size:22px;color:#123c5b}
+.kpi span{font-size:12px;color:#607d8b}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:820px){.grid2{grid-template-columns:1fr}}
+.chart-sm{width:100%;height:260px}
+footer{text-align:center;color:#7b8a94;font-size:12px;padding:20px}
+</style></head><body>
+<header><h1>Validación e-IAD — Reporte Ejecutivo Enriquecido</h1>
+<p>Generado: 2026-11-17 16:57  |  Librería local: echarts.min.js  |  Catálogos: contris_big + CIIU + rtt_ciat_80k  |  Umbral: -0.75</p></header>
+<div class='cont'>
+<details class='sec' open><summary>1. Resumen Ejecutivo e Interpretación de Scores<span class='chip'>22 anomalías</span></summary><div class='secbody'>
+    <div>
+        <div class='kpi'><b>7,395,819</b><span>Registros evaluados</span></div>
+        <div class='kpi'><b>22</b><span>Anomalías (≤ -0.75)</span></div>
+        <div class='kpi'><b>3</b><span>Contribuyentes únicos</span></div>
+        <div class='kpi'><b>0</b><span>En consenso (2+ slices)</span></div>
+    </div>
+    <div class='nota' style='margin-top:12px'>
+        <b>¿Qué significan los números negativos?</b> El modelo <i>Isolation Forest</i> puntúa
+        qué tan fácil es aislar un contribuyente frente a toda la población:
+        <b>-0.35</b> es comportamiento normal; valores menores a <b>-0.75</b> son casos extremos.
+        Un contribuyente grande (ej. un banco en estrato A3/B1) puede salir con score muy negativo
+        simplemente por su volumen patrimonial y exención de IVA, sin que ello implique irregularidad.
+    </div>
+    <div class='card'>
+        <h3>Distribución de anomalías por granularidad temporal</h3>
+        <div id='g_slice' class='chart-sm'></div>
+        <script>ECHARTS_PENDING['g_slice']={"tooltip": {"trigger": "axis"}, "grid": {"left": 45, "right": 20, "top": 24, "bottom": 35}, "xAxis": {"type": "category", "data": ["Diario", "Semanal", "Mensual", "Trimestral", "Anual"]}, "yAxis": {"type": "value"}, "series": [{"type": "bar", "data": [21, 1, 0, 0, 0], "itemStyle": {"color": "#1b5a86"}, "barWidth": "45%", "label": {"show": true, "position": "top"}}]};</script>
+    </div>
+    </div></details>
+<details class='sec' open><summary>2. Dictamen de Anomalías bajo Umbral (Con Razón Social y Sector)<span class='chip'>3 contribuyentes / 22 eventos</span></summary><div class='secbody'><div class='nota'><b>Lectura ejecutiva:</b> Se cruza cada RUC anómalo con <b>contris_big</b>, <b>actividad económica</b> y su <b>estrato RTT</b> para separar inmediatamente los <b>falsos positivos por tamaño/sector</b> (bancos en estrato A3/B1) de los casos <b>accionables</b>.</div>
+<div class='card'>
+<div style='display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px'><div><b class='mono'>1790010937001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO PICHINCHA CA</div></div><div><span class='badge b-gris'>INFORMATIVA (Falso Positivo por Tamaño/Sector)</span> <span class='badge b-gris'>12 periodo(s)</span></div></div>
+<p style='margin:8px 0;font-size:13px'><b>Dictamen en palabras simples:</b> No sugiere irregularidad: es una entidad grande/financiera (Estrato A3) aislada por Capital social suscrito, Activos totales, Pasivos totales al compararse con pymes.</p>
+<p style='margin:4px 0 10px;font-size:12px;color:#546e7a'><b>Variables principales que aislaron al contribuyente:</b> 1) Capital social suscrito · 2) Activos totales · 3) Pasivos totales</p>
+<div style="overflow-x:auto"><table class="data"><thead><tr>
+<th>Periodicidad</th>
+<th>Fecha</th>
+<th>Score (más negativo = más atípico)</th>
+</tr></thead><tbody>
+<tr><td>Diario</td><td>2024-12-31</td><td><b>-0.7787</b></td></tr>
+<tr><td>Diario</td><td>2024-01-31</td><td><b>-0.7776</b></td></tr>
+<tr><td>Diario</td><td>2024-10-31</td><td><b>-0.7754</b></td></tr>
+<tr><td>Diario</td><td>2024-07-31</td><td><b>-0.7741</b></td></tr>
+<tr><td>Diario</td><td>2024-05-31</td><td><b>-0.7732</b></td></tr>
+<tr><td>Diario</td><td>2024-08-31</td><td><b>-0.7716</b></td></tr>
+<tr><td>Diario</td><td>2024-09-30</td><td><b>-0.7714</b></td></tr>
+<tr><td>Diario</td><td>2024-06-30</td><td><b>-0.7712</b></td></tr>
+<tr><td>Diario</td><td>2024-02-29</td><td><b>-0.7711</b></td></tr>
+<tr><td>Diario</td><td>2024-04-30</td><td><b>-0.7711</b></td></tr>
+<tr><td>Diario</td><td>2024-11-30</td><td><b>-0.7682</b></td></tr>
+<tr><td>Diario</td><td>2024-03-28</td><td><b>-0.7614</b></td></tr>
+</tbody></table></div>
+</div>
+<div class='card'>
+<div style='display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px'><div><b class='mono'>0990005737001</b> <span class='badge b-azul'>Estrato B1</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO DEL PACIFICO S.A.</div></div><div><span class='badge b-gris'>INFORMATIVA (Falso Positivo por Tamaño/Sector)</span> <span class='badge b-gris'>9 periodo(s)</span></div></div>
+<p style='margin:8px 0;font-size:13px'><b>Dictamen en palabras simples:</b> No sugiere irregularidad: es una entidad grande/financiera (Estrato B1) aislada por Capital social suscrito, Activos totales, Pasivos totales al compararse con pymes.</p>
+<p style='margin:4px 0 10px;font-size:12px;color:#546e7a'><b>Variables principales que aislaron al contribuyente:</b> 1) Capital social suscrito · 2) Activos totales · 3) Pasivos totales</p>
+<div style="overflow-x:auto"><table class="data"><thead><tr>
+<th>Periodicidad</th>
+<th>Fecha</th>
+<th>Score (más negativo = más atípico)</th>
+</tr></thead><tbody>
+<tr><td>Diario</td><td>2024-12-31</td><td><b>-0.7606</b></td></tr>
+<tr><td>Diario</td><td>2024-10-31</td><td><b>-0.7583</b></td></tr>
+<tr><td>Diario</td><td>2024-09-30</td><td><b>-0.7573</b></td></tr>
+<tr><td>Diario</td><td>2024-01-31</td><td><b>-0.7547</b></td></tr>
+<tr><td>Diario</td><td>2024-04-30</td><td><b>-0.7522</b></td></tr>
+<tr><td>Diario</td><td>2024-02-29</td><td><b>-0.7521</b></td></tr>
+<tr><td>Diario</td><td>2024-09-27</td><td><b>-0.7519</b></td></tr>
+<tr><td>Diario</td><td>2024-07-31</td><td><b>-0.7517</b></td></tr>
+<tr><td>Diario</td><td>2024-05-31</td><td><b>-0.7512</b></td></tr>
+</tbody></table></div>
+</div>
+<div class='card'>
+<div style='display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px'><div><b class='mono'>1791840712001</b> <span class='badge b-azul'>Estrato B2</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>AURELIAN ECUADOR S.A.</div></div><div><span class='badge b-rojo'>ALTA (Accionable)</span> <span class='badge b-gris'>1 periodo(s)</span></div></div>
+<p style='margin:8px 0;font-size:13px'><b>Dictamen en palabras simples:</b> Comportamiento de facturación atípico: IVA mínimo en el año, IVA mínimo en el periodo. Se recomienda revisar comprobantes y estructura de IVA.</p>
+<p style='margin:4px 0 10px;font-size:12px;color:#546e7a'><b>Variables principales que aislaron al contribuyente:</b> 1) Capital social suscrito · 2) IVA mínimo en el año · 3) IVA mínimo en el periodo</p>
+<div style="overflow-x:auto"><table class="data"><thead><tr>
+<th>Periodicidad</th>
+<th>Fecha</th>
+<th>Score (más negativo = más atípico)</th>
+</tr></thead><tbody>
+<tr><td>Semanal</td><td>2024-12-05</td><td><b>-0.7505</b></td></tr>
+</tbody></table></div>
+</div></div></details>
+<details class='sec' open><summary>3. Top 10 Contribuyentes Más Atípicos (Ranking Global e-IAD)<span class='chip'>Top 10 Global</span></summary><div class='secbody'><div style="overflow-x:auto"><table class="data"><thead><tr>
+<th>#</th>
+<th>Contribuyente (contris_big + Estrato)</th>
+<th>Peor Score</th>
+<th>Slice Principal</th>
+<th>Clasificación</th>
+<th>¿Por qué salió en el Top 10? (Simple)</th>
+</tr></thead><tbody>
+<tr><td><b>#1</b></td><td><b class='mono'>1790010937001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO PICHINCHA CA</div></td><td><b>-0.7787</b></td><td>Diario</td><td><span class='badge b-gris'>INFORMATIVA (Falso Positivo por Tamaño/Sector)</span></td><td>No sugiere irregularidad: es una entidad grande/financiera (Estrato A3) aislada por Capital social suscrito, Activos totales, Pasivos totales al compararse con pymes.</td></tr>
+<tr><td><b>#2</b></td><td><b class='mono'>0990005737001</b> <span class='badge b-azul'>Estrato B1</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO DEL PACIFICO S.A.</div></td><td><b>-0.7606</b></td><td>Diario</td><td><span class='badge b-gris'>INFORMATIVA (Falso Positivo por Tamaño/Sector)</span></td><td>No sugiere irregularidad: es una entidad grande/financiera (Estrato B1) aislada por Capital social suscrito, Activos totales, Pasivos totales al compararse con pymes.</td></tr>
+<tr><td><b>#3</b></td><td><b class='mono'>1791840712001</b> <span class='badge b-azul'>Estrato B2</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>AURELIAN ECUADOR S.A.</div></td><td><b>-0.7505</b></td><td>Semanal</td><td><span class='badge b-rojo'>ALTA (Accionable)</span></td><td>Comportamiento de facturación atípico: IVA mínimo en el año, IVA mínimo en el periodo. Se recomienda revisar comprobantes y estructura de IVA.</td></tr>
+<tr><td><b>#4</b></td><td><b class='mono'>0993367439001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>GDFSE S.A.S.</div></td><td><b>-0.7457</b></td><td>Semanal</td><td><span class='badge b-ambar'>SEGUIMIENTO (Top 10)</span></td><td>Contribuyente recurrente en la cola extrema (by_week) con alta frecuencia de facturación en su segmento.</td></tr>
+<tr><td><b>#5</b></td><td><b class='mono'>0990049459001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO GUAYAQUIL S.A.</div></td><td><b>-0.7449</b></td><td>Diario</td><td><span class='badge b-gris'>INFORMATIVA (Tamaño/Sector)</span></td><td>Gran contribuyente (Estrato A3) aislado por escala de operaciones y volumen de comprobantes.</td></tr>
+<tr><td><b>#6</b></td><td><b class='mono'>0993385974001</b> <span class='badge b-azul'>Estrato C2</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>IBENPHARMA S.A.</div></td><td><b>-0.7447</b></td><td>Anual</td><td><span class='badge b-ambar'>SEGUIMIENTO (Top 10)</span></td><td>Contribuyente recurrente en la cola extrema (by_year) con alta frecuencia de facturación en su segmento.</td></tr>
+<tr><td><b>#7</b></td><td><b class='mono'>1791411099001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>AC BEBIDAS ECUADOR ACBE CIA.LTDA.</div></td><td><b>-0.7434</b></td><td>Semanal</td><td><span class='badge b-gris'>INFORMATIVA (Tamaño/Sector)</span></td><td>Gran contribuyente (Estrato A3) aislado por escala de operaciones y volumen de comprobantes.</td></tr>
+<tr><td><b>#8</b></td><td><b class='mono'>1790283380001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO DINERS CLUB DEL ECUADOR S.A.</div></td><td><b>-0.7380</b></td><td>Diario</td><td><span class='badge b-gris'>INFORMATIVA (Tamaño/Sector)</span></td><td>Gran contribuyente (Estrato A3) aislado por escala de operaciones y volumen de comprobantes.</td></tr>
+<tr><td><b>#9</b></td><td><b class='mono'>2390626617001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 469000</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>PROVESA SCC</div></td><td><b>-0.7371</b></td><td>Anual</td><td><span class='badge b-ambar'>SEGUIMIENTO (Top 10)</span></td><td>Contribuyente recurrente en la cola extrema (by_year) con alta frecuencia de facturación en su segmento.</td></tr>
+<tr><td><b>#10</b></td><td><b class='mono'>0990004196001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>CORPORACION EL ROSADO S.A.</div></td><td><b>-0.7330</b></td><td>Mensual</td><td><span class='badge b-gris'>INFORMATIVA (Tamaño/Sector)</span></td><td>Gran contribuyente (Estrato A3) aislado por escala de operaciones y volumen de comprobantes.</td></tr>
+</tbody></table></div></div></details>
+<details class='sec'><summary>4. Resumen por Granularidad Temporal (Slice)</summary><div class='secbody'><div style="overflow-x:auto"><table class="data"><thead><tr>
+<th>Slice</th>
+<th>Registros</th>
+<th>Anomalías (&lt;= -0.75)</th>
+<th>Score Mínimo</th>
+</tr></thead><tbody>
+<tr><td>by_day</td><td>5,238,787</td><td><span class='badge b-rojo'>21</span></td><td>-0.7787</td></tr>
+<tr><td>by_week</td><td>1,499,405</td><td><span class='badge b-rojo'>1</span></td><td>-0.7505</td></tr>
+<tr><td>by_month</td><td>451,885</td><td><span class='badge b-verde'>0</span></td><td>-0.7359</td></tr>
+<tr><td>by_quarter</td><td>162,868</td><td><span class='badge b-verde'>0</span></td><td>-0.7496</td></tr>
+<tr><td>by_year</td><td>42,874</td><td><span class='badge b-verde'>0</span></td><td>-0.7447</td></tr>
+</tbody></table></div></div></details>
+<details class='sec'><summary>5. Ranking Top 50 por Slice (Enriquecido)</summary><div class='secbody'><div>
+<button class='tabbtn activo' onclick="tab('p_by_day',this)">by_day</button>
+<button class='tabbtn' onclick="tab('p_by_week',this)">by_week</button>
+<button class='tabbtn' onclick="tab('p_by_month',this)">by_month</button>
+<button class='tabbtn' onclick="tab('p_by_quarter',this)">by_quarter</button>
+<button class='tabbtn' onclick="tab('p_by_year',this)">by_year</button>
+<div class='panel' id='p_by_day' style='display:block'>
+<div style="overflow-x:auto"><table class="data"><thead><tr>
+<th>#</th>
+<th>Contribuyente (RUC / Razón Social / Actividad)</th>
+<th>Fecha</th>
+<th>Score</th>
+<th>Estado</th>
+</tr></thead><tbody>
+<tr><td>1</td><td><b class='mono'>1790010937001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO PICHINCHA CA</div></td><td>2024-12-31</td><td><b>-0.7787</b></td><td><span class="badge b-rojo">Anomalía</span></td></tr>
+<tr><td>2</td><td><b class='mono'>1790010937001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO PICHINCHA CA</div></td><td>2024-01-31</td><td><b>-0.7776</b></td><td><span class="badge b-rojo">Anomalía</span></td></tr>
+<tr><td>3</td><td><b class='mono'>1790010937001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO PICHINCHA CA</div></td><td>2024-10-31</td><td><b>-0.7754</b></td><td><span class="badge b-rojo">Anomalía</span></td></tr>
+<tr><td>4</td><td><b class='mono'>1790010937001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO PICHINCHA CA</div></td><td>2024-07-31</td><td><b>-0.7741</b></td><td><span class="badge b-rojo">Anomalía</span></td></tr>
+<tr><td>5</td><td><b class='mono'>1790010937001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO PICHINCHA CA</div></td><td>2024-05-31</td><td><b>-0.7732</b></td><td><span class="badge b-rojo">Anomalía</span></td></tr>
+<tr><td>6</td><td><b class='mono'>1790010937001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO PICHINCHA CA</div></td><td>2024-08-31</td><td><b>-0.7716</b></td><td><span class="badge b-rojo">Anomalía</span></td></tr>
+<tr><td>7</td><td><b class='mono'>1790010937001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO PICHINCHA CA</div></td><td>2024-09-30</td><td><b>-0.7714</b></td><td><span class="badge b-rojo">Anomalía</span></td></tr>
+<tr><td>8</td><td><b class='mono'>1790010937001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO PICHINCHA CA</div></td><td>2024-06-30</td><td><b>-0.7712</b></td><td><span class="badge b-rojo">Anomalía</span></td></tr>
+<tr><td>9</td><td><b class='mono'>1790010937001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO PICHINCHA CA</div></td><td>2024-02-29</td><td><b>-0.7711</b></td><td><span class="badge b-rojo">Anomalía</span></td></tr>
+<tr><td>10</td><td><b class='mono'>1790010937001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO PICHINCHA CA</div></td><td>2024-04-30</td><td><b>-0.7711</b></td><td><span class="badge b-rojo">Anomalía</span></td></tr>
+<tr><td>11</td><td><b class='mono'>1790010937001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO PICHINCHA CA</div></td><td>2024-11-30</td><td><b>-0.7682</b></td><td><span class="badge b-rojo">Anomalía</span></td></tr>
+<tr><td>12</td><td><b class='mono'>1790010937001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO PICHINCHA CA</div></td><td>2024-03-28</td><td><b>-0.7614</b></td><td><span class="badge b-rojo">Anomalía</span></td></tr>
+<tr><td>13</td><td><b class='mono'>0990005737001</b> <span class='badge b-azul'>Estrato B1</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO DEL PACIFICO S.A.</div></td><td>2024-12-31</td><td><b>-0.7606</b></td><td><span class="badge b-rojo">Anomalía</span></td></tr>
+<tr><td>14</td><td><b class='mono'>0990005737001</b> <span class='badge b-azul'>Estrato B1</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO DEL PACIFICO S.A.</div></td><td>2024-10-31</td><td><b>-0.7583</b></td><td><span class="badge b-rojo">Anomalía</span></td></tr>
+<tr><td>15</td><td><b class='mono'>0990005737001</b> <span class='badge b-azul'>Estrato B1</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO DEL PACIFICO S.A.</div></td><td>2024-09-30</td><td><b>-0.7573</b></td><td><span class="badge b-rojo">Anomalía</span></td></tr>
+<tr><td>16</td><td><b class='mono'>0990005737001</b> <span class='badge b-azul'>Estrato B1</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO DEL PACIFICO S.A.</div></td><td>2024-01-31</td><td><b>-0.7547</b></td><td><span class="badge b-rojo">Anomalía</span></td></tr>
+<tr><td>17</td><td><b class='mono'>0990005737001</b> <span class='badge b-azul'>Estrato B1</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO DEL PACIFICO S.A.</div></td><td>2024-04-30</td><td><b>-0.7522</b></td><td><span class="badge b-rojo">Anomalía</span></td></tr>
+<tr><td>18</td><td><b class='mono'>0990005737001</b> <span class='badge b-azul'>Estrato B1</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO DEL PACIFICO S.A.</div></td><td>2024-02-29</td><td><b>-0.7521</b></td><td><span class="badge b-rojo">Anomalía</span></td></tr>
+<tr><td>19</td><td><b class='mono'>0990005737001</b> <span class='badge b-azul'>Estrato B1</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO DEL PACIFICO S.A.</div></td><td>2024-09-27</td><td><b>-0.7519</b></td><td><span class="badge b-rojo">Anomalía</span></td></tr>
+<tr><td>20</td><td><b class='mono'>0990005737001</b> <span class='badge b-azul'>Estrato B1</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO DEL PACIFICO S.A.</div></td><td>2024-07-31</td><td><b>-0.7517</b></td><td><span class="badge b-rojo">Anomalía</span></td></tr>
+<tr><td>21</td><td><b class='mono'>0990005737001</b> <span class='badge b-azul'>Estrato B1</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO DEL PACIFICO S.A.</div></td><td>2024-05-31</td><td><b>-0.7512</b></td><td><span class="badge b-rojo">Anomalía</span></td></tr>
+<tr><td>22</td><td><b class='mono'>0990005737001</b> <span class='badge b-azul'>Estrato B1</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO DEL PACIFICO S.A.</div></td><td>2024-11-29</td><td><b>-0.7466</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>23</td><td><b class='mono'>0990049459001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO GUAYAQUIL S.A.</div></td><td>2024-09-30</td><td><b>-0.7449</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>24</td><td><b class='mono'>0990005737001</b> <span class='badge b-azul'>Estrato B1</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO DEL PACIFICO S.A.</div></td><td>2024-06-28</td><td><b>-0.7443</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>25</td><td><b class='mono'>0990005737001</b> <span class='badge b-azul'>Estrato B1</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO DEL PACIFICO S.A.</div></td><td>2024-08-30</td><td><b>-0.7436</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>26</td><td><b class='mono'>0990049459001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO GUAYAQUIL S.A.</div></td><td>2024-12-31</td><td><b>-0.7432</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>27</td><td><b class='mono'>1790283380001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO DINERS CLUB DEL ECUADOR S.A.</div></td><td>2024-12-31</td><td><b>-0.7380</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>28</td><td><b class='mono'>1790283380001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO DINERS CLUB DEL ECUADOR S.A.</div></td><td>2024-11-30</td><td><b>-0.7379</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>29</td><td><b class='mono'>0990049459001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO GUAYAQUIL S.A.</div></td><td>2024-03-31</td><td><b>-0.7374</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>30</td><td><b class='mono'>0990049459001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO GUAYAQUIL S.A.</div></td><td>2024-11-29</td><td><b>-0.7362</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>31</td><td><b class='mono'>0990049459001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO GUAYAQUIL S.A.</div></td><td>2024-10-31</td><td><b>-0.7357</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>32</td><td><b class='mono'>0990049459001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO GUAYAQUIL S.A.</div></td><td>2024-08-30</td><td><b>-0.7357</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>33</td><td><b class='mono'>1790283380001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO DINERS CLUB DEL ECUADOR S.A.</div></td><td>2024-10-31</td><td><b>-0.7355</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>34</td><td><b class='mono'>1790283380001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO DINERS CLUB DEL ECUADOR S.A.</div></td><td>2024-09-30</td><td><b>-0.7348</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>35</td><td><b class='mono'>1790283380001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO DINERS CLUB DEL ECUADOR S.A.</div></td><td>2024-01-31</td><td><b>-0.7342</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>36</td><td><b class='mono'>1790283380001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO DINERS CLUB DEL ECUADOR S.A.</div></td><td>2024-07-31</td><td><b>-0.7337</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>37</td><td><b class='mono'>1791840712001</b> <span class='badge b-azul'>Estrato B2</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>AURELIAN ECUADOR S.A.</div></td><td>2024-12-05</td><td><b>-0.7320</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>38</td><td><b class='mono'>0990049459001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO GUAYAQUIL S.A.</div></td><td>2024-05-31</td><td><b>-0.7319</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>39</td><td><b class='mono'>0990049459001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO GUAYAQUIL S.A.</div></td><td>2024-07-31</td><td><b>-0.7318</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>40</td><td><b class='mono'>1790283380001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO DINERS CLUB DEL ECUADOR S.A.</div></td><td>2024-05-31</td><td><b>-0.7317</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>41</td><td><b class='mono'>0990049459001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO GUAYAQUIL S.A.</div></td><td>2024-01-31</td><td><b>-0.7315</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>42</td><td><b class='mono'>1790283380001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO DINERS CLUB DEL ECUADOR S.A.</div></td><td>2024-03-31</td><td><b>-0.7314</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>43</td><td><b class='mono'>0990005737001</b> <span class='badge b-azul'>Estrato B1</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO DEL PACIFICO S.A.</div></td><td>2024-03-28</td><td><b>-0.7313</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>44</td><td><b class='mono'>1790283380001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO DINERS CLUB DEL ECUADOR S.A.</div></td><td>2024-04-30</td><td><b>-0.7310</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>45</td><td><b class='mono'>1790283380001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO DINERS CLUB DEL ECUADOR S.A.</div></td><td>2024-02-29</td><td><b>-0.7309</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>46</td><td><b class='mono'>0990049459001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO GUAYAQUIL S.A.</div></td><td>2024-06-28</td><td><b>-0.7306</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>47</td><td><b class='mono'>1790283380001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO DINERS CLUB DEL ECUADOR S.A.</div></td><td>2024-06-30</td><td><b>-0.7305</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>48</td><td><b class='mono'>1791840712001</b> <span class='badge b-azul'>Estrato B2</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>AURELIAN ECUADOR S.A.</div></td><td>2024-10-07</td><td><b>-0.7300</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>49</td><td><b class='mono'>1791840712001</b> <span class='badge b-azul'>Estrato B2</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>AURELIAN ECUADOR S.A.</div></td><td>2024-11-06</td><td><b>-0.7294</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>50</td><td><b class='mono'>1791840712001</b> <span class='badge b-azul'>Estrato B2</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>AURELIAN ECUADOR S.A.</div></td><td>2024-09-06</td><td><b>-0.7286</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+</tbody></table></div>
+</div>
+<div class='panel' id='p_by_week' style='display:none'>
+<div style="overflow-x:auto"><table class="data"><thead><tr>
+<th>#</th>
+<th>Contribuyente (RUC / Razón Social / Actividad)</th>
+<th>Fecha</th>
+<th>Score</th>
+<th>Estado</th>
+</tr></thead><tbody>
+<tr><td>1</td><td><b class='mono'>1791840712001</b> <span class='badge b-azul'>Estrato B2</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>AURELIAN ECUADOR S.A.</div></td><td>2024-12-05</td><td><b>-0.7505</b></td><td><span class="badge b-rojo">Anomalía</span></td></tr>
+<tr><td>2</td><td><b class='mono'>1791840712001</b> <span class='badge b-azul'>Estrato B2</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>AURELIAN ECUADOR S.A.</div></td><td>2024-11-06</td><td><b>-0.7484</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>3</td><td><b class='mono'>1791840712001</b> <span class='badge b-azul'>Estrato B2</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>AURELIAN ECUADOR S.A.</div></td><td>2024-01-17</td><td><b>-0.7462</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>4</td><td><b class='mono'>0993367439001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>GDFSE S.A.S.</div></td><td>2024-01-01</td><td><b>-0.7457</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>5</td><td><b class='mono'>1791840712001</b> <span class='badge b-azul'>Estrato B2</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>AURELIAN ECUADOR S.A.</div></td><td>2024-02-06</td><td><b>-0.7443</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>6</td><td><b class='mono'>1791840712001</b> <span class='badge b-azul'>Estrato B2</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>AURELIAN ECUADOR S.A.</div></td><td>2024-09-06</td><td><b>-0.7439</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>7</td><td><b class='mono'>1791411099001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>AC BEBIDAS ECUADOR ACBE CIA.LTDA.</div></td><td>2024-12-23</td><td><b>-0.7434</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>8</td><td><b class='mono'>1791840712001</b> <span class='badge b-azul'>Estrato B2</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>AURELIAN ECUADOR S.A.</div></td><td>2024-08-05</td><td><b>-0.7432</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>9</td><td><b class='mono'>1791840712001</b> <span class='badge b-azul'>Estrato B2</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>AURELIAN ECUADOR S.A.</div></td><td>2024-10-07</td><td><b>-0.7429</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>10</td><td><b class='mono'>1791840712001</b> <span class='badge b-azul'>Estrato B2</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>AURELIAN ECUADOR S.A.</div></td><td>2024-03-08</td><td><b>-0.7424</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>11</td><td><b class='mono'>1791840712001</b> <span class='badge b-azul'>Estrato B2</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>AURELIAN ECUADOR S.A.</div></td><td>2024-07-04</td><td><b>-0.7420</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>12</td><td><b class='mono'>0993385974001</b> <span class='badge b-azul'>Estrato C2</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>IBENPHARMA S.A.</div></td><td>2024-09-30</td><td><b>-0.7414</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>13</td><td><b class='mono'>0993385974001</b> <span class='badge b-azul'>Estrato C2</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>IBENPHARMA S.A.</div></td><td>2024-10-28</td><td><b>-0.7408</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>14</td><td><b class='mono'>1791840712001</b> <span class='badge b-azul'>Estrato B2</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>AURELIAN ECUADOR S.A.</div></td><td>2024-05-07</td><td><b>-0.7400</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>15</td><td><b class='mono'>1791840712001</b> <span class='badge b-azul'>Estrato B2</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>AURELIAN ECUADOR S.A.</div></td><td>2024-06-05</td><td><b>-0.7397</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>16</td><td><b class='mono'>0993385974001</b> <span class='badge b-azul'>Estrato C2</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>IBENPHARMA S.A.</div></td><td>2024-12-16</td><td><b>-0.7392</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>17</td><td><b class='mono'>0993385974001</b> <span class='badge b-azul'>Estrato C2</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>IBENPHARMA S.A.</div></td><td>2024-11-25</td><td><b>-0.7388</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>18</td><td><b class='mono'>1791840712001</b> <span class='badge b-azul'>Estrato B2</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>AURELIAN ECUADOR S.A.</div></td><td>2024-04-08</td><td><b>-0.7380</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>19</td><td><b class='mono'>0993385974001</b> <span class='badge b-azul'>Estrato C2</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>IBENPHARMA S.A.</div></td><td>2024-12-09</td><td><b>-0.7374</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>20</td><td><b class='mono'>0993367439001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>GDFSE S.A.S.</div></td><td>2024-03-18</td><td><b>-0.7369</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>21</td><td><b class='mono'>0993367439001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>GDFSE S.A.S.</div></td><td>2024-12-23</td><td><b>-0.7369</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>22</td><td><b class='mono'>0993385974001</b> <span class='badge b-azul'>Estrato C2</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>IBENPHARMA S.A.</div></td><td>2024-07-29</td><td><b>-0.7368</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>23</td><td><b class='mono'>0993367439001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>GDFSE S.A.S.</div></td><td>2024-12-16</td><td><b>-0.7367</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>24</td><td><b class='mono'>0993385974001</b> <span class='badge b-azul'>Estrato C2</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>IBENPHARMA S.A.</div></td><td>2024-11-11</td><td><b>-0.7367</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>25</td><td><b class='mono'>0993385974001</b> <span class='badge b-azul'>Estrato C2</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>IBENPHARMA S.A.</div></td><td>2024-12-02</td><td><b>-0.7363</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>26</td><td><b class='mono'>0993385974001</b> <span class='badge b-azul'>Estrato C2</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>IBENPHARMA S.A.</div></td><td>2024-08-26</td><td><b>-0.7362</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>27</td><td><b class='mono'>0993385974001</b> <span class='badge b-azul'>Estrato C2</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>IBENPHARMA S.A.</div></td><td>2024-11-18</td><td><b>-0.7348</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>28</td><td><b class='mono'>0993385974001</b> <span class='badge b-azul'>Estrato C2</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>IBENPHARMA S.A.</div></td><td>2024-12-23</td><td><b>-0.7346</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>29</td><td><b class='mono'>0993385974001</b> <span class='badge b-azul'>Estrato C2</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>IBENPHARMA S.A.</div></td><td>2024-10-14</td><td><b>-0.7344</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>30</td><td><b class='mono'>0993385974001</b> <span class='badge b-azul'>Estrato C2</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>IBENPHARMA S.A.</div></td><td>2024-09-16</td><td><b>-0.7334</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>31</td><td><b class='mono'>0993367439001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>GDFSE S.A.S.</div></td><td>2024-09-30</td><td><b>-0.7334</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>32</td><td><b class='mono'>1790010937001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO PICHINCHA CA</div></td><td>2024-01-03</td><td><b>-0.7330</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>33</td><td><b class='mono'>0993385974001</b> <span class='badge b-azul'>Estrato C2</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>IBENPHARMA S.A.</div></td><td>2024-11-04</td><td><b>-0.7330</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>34</td><td><b class='mono'>1793194697001</b> <span class='badge b-azul'>Estrato C3</span> <span class='badge b-gris'>CIIU 841211</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>FUNDACION PROSPERAR SALUD</div></td><td>2024-11-30</td><td><b>-0.7326</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>35</td><td><b class='mono'>0992526742001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>DINADEC S.A.</div></td><td>2024-01-02</td><td><b>-0.7325</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>36</td><td><b class='mono'>1793194697001</b> <span class='badge b-azul'>Estrato C3</span> <span class='badge b-gris'>CIIU 841211</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>FUNDACION PROSPERAR SALUD</div></td><td>2024-12-31</td><td><b>-0.7325</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>37</td><td><b class='mono'>0993385974001</b> <span class='badge b-azul'>Estrato C2</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>IBENPHARMA S.A.</div></td><td>2024-08-19</td><td><b>-0.7324</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>38</td><td><b class='mono'>0993367439001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>GDFSE S.A.S.</div></td><td>2024-09-16</td><td><b>-0.7323</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>39</td><td><b class='mono'>0993367439001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>GDFSE S.A.S.</div></td><td>2024-07-29</td><td><b>-0.7320</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>40</td><td><b class='mono'>0993367439001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>GDFSE S.A.S.</div></td><td>2024-11-25</td><td><b>-0.7315</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>41</td><td><b class='mono'>0993385974001</b> <span class='badge b-azul'>Estrato C2</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>IBENPHARMA S.A.</div></td><td>2024-09-02</td><td><b>-0.7315</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>42</td><td><b class='mono'>0993385974001</b> <span class='badge b-azul'>Estrato C2</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>IBENPHARMA S.A.</div></td><td>2024-09-09</td><td><b>-0.7313</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>43</td><td><b class='mono'>0993385974001</b> <span class='badge b-azul'>Estrato C2</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>IBENPHARMA S.A.</div></td><td>2024-08-12</td><td><b>-0.7311</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>44</td><td><b class='mono'>0993367439001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>GDFSE S.A.S.</div></td><td>2024-08-26</td><td><b>-0.7309</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>45</td><td><b class='mono'>0993367439001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>GDFSE S.A.S.</div></td><td>2024-10-28</td><td><b>-0.7305</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>46</td><td><b class='mono'>1790010937001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO PICHINCHA CA</div></td><td>2024-12-17</td><td><b>-0.7302</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>47</td><td><b class='mono'>0993385974001</b> <span class='badge b-azul'>Estrato C2</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>IBENPHARMA S.A.</div></td><td>2024-10-07</td><td><b>-0.7301</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>48</td><td><b class='mono'>0993367439001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>GDFSE S.A.S.</div></td><td>2024-06-24</td><td><b>-0.7301</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>49</td><td><b class='mono'>0993367439001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>GDFSE S.A.S.</div></td><td>2024-07-22</td><td><b>-0.7301</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>50</td><td><b class='mono'>0993385974001</b> <span class='badge b-azul'>Estrato C2</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>IBENPHARMA S.A.</div></td><td>2024-10-21</td><td><b>-0.7301</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+</tbody></table></div>
+</div>
+<div class='panel' id='p_by_month' style='display:none'>
+<div style="overflow-x:auto"><table class="data"><thead><tr>
+<th>#</th>
+<th>Contribuyente (RUC / Razón Social / Actividad)</th>
+<th>Fecha</th>
+<th>Score</th>
+<th>Estado</th>
+</tr></thead><tbody>
+<tr><td>1</td><td><b class='mono'>0993367439001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>GDFSE S.A.S.</div></td><td>2024-03-01</td><td><b>-0.7359</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>2</td><td><b class='mono'>2390626617001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 469000</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>PROVESA SCC</div></td><td>2024-12-01</td><td><b>-0.7336</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>3</td><td><b class='mono'>0990004196001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>CORPORACION EL ROSADO S.A.</div></td><td>2024-12-01</td><td><b>-0.7330</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>4</td><td><b class='mono'>0993385974001</b> <span class='badge b-azul'>Estrato C2</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>IBENPHARMA S.A.</div></td><td>2024-12-01</td><td><b>-0.7324</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>5</td><td><b class='mono'>0993385974001</b> <span class='badge b-azul'>Estrato C2</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>IBENPHARMA S.A.</div></td><td>2024-09-01</td><td><b>-0.7310</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>6</td><td><b class='mono'>0992526742001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>DINADEC S.A.</div></td><td>2024-11-01</td><td><b>-0.7310</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>7</td><td><b class='mono'>0993367439001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>GDFSE S.A.S.</div></td><td>2024-12-01</td><td><b>-0.7287</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>8</td><td><b class='mono'>0990004196001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>CORPORACION EL ROSADO S.A.</div></td><td>2024-03-01</td><td><b>-0.7281</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>9</td><td><b class='mono'>0990004196001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>CORPORACION EL ROSADO S.A.</div></td><td>2024-11-01</td><td><b>-0.7269</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>10</td><td><b class='mono'>2390626617001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 469000</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>PROVESA SCC</div></td><td>2024-11-01</td><td><b>-0.7264</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>11</td><td><b class='mono'>0993385974001</b> <span class='badge b-azul'>Estrato C2</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>IBENPHARMA S.A.</div></td><td>2024-05-01</td><td><b>-0.7262</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>12</td><td><b class='mono'>2390626617001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 469000</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>PROVESA SCC</div></td><td>2024-09-01</td><td><b>-0.7261</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>13</td><td><b class='mono'>0990004196001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>CORPORACION EL ROSADO S.A.</div></td><td>2024-01-01</td><td><b>-0.7259</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>14</td><td><b class='mono'>0993367439001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>GDFSE S.A.S.</div></td><td>2024-04-01</td><td><b>-0.7257</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>15</td><td><b class='mono'>0992526742001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>DINADEC S.A.</div></td><td>2024-12-02</td><td><b>-0.7257</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>16</td><td><b class='mono'>0993367439001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>GDFSE S.A.S.</div></td><td>2024-01-01</td><td><b>-0.7253</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>17</td><td><b class='mono'>0993385974001</b> <span class='badge b-azul'>Estrato C2</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>IBENPHARMA S.A.</div></td><td>2024-08-01</td><td><b>-0.7253</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>18</td><td><b class='mono'>0990004196001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>CORPORACION EL ROSADO S.A.</div></td><td>2024-09-01</td><td><b>-0.7251</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>19</td><td><b class='mono'>2390626617001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 469000</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>PROVESA SCC</div></td><td>2024-10-01</td><td><b>-0.7251</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>20</td><td><b class='mono'>0993385974001</b> <span class='badge b-azul'>Estrato C2</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>IBENPHARMA S.A.</div></td><td>2024-11-01</td><td><b>-0.7249</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>21</td><td><b class='mono'>0993367439001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>GDFSE S.A.S.</div></td><td>2024-07-01</td><td><b>-0.7249</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>22</td><td><b class='mono'>0993367439001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>GDFSE S.A.S.</div></td><td>2024-09-01</td><td><b>-0.7247</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>23</td><td><b class='mono'>0993385974001</b> <span class='badge b-azul'>Estrato C2</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>IBENPHARMA S.A.</div></td><td>2024-06-01</td><td><b>-0.7245</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>24</td><td><b class='mono'>0993367439001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>GDFSE S.A.S.</div></td><td>2024-02-01</td><td><b>-0.7244</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>25</td><td><b class='mono'>0993367439001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>GDFSE S.A.S.</div></td><td>2024-06-01</td><td><b>-0.7244</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>26</td><td><b class='mono'>1790010937001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO PICHINCHA CA</div></td><td>2024-12-03</td><td><b>-0.7243</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>27</td><td><b class='mono'>0993367439001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>GDFSE S.A.S.</div></td><td>2024-05-01</td><td><b>-0.7241</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>28</td><td><b class='mono'>0992526742001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>DINADEC S.A.</div></td><td>2024-08-01</td><td><b>-0.7240</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>29</td><td><b class='mono'>0993367439001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>GDFSE S.A.S.</div></td><td>2024-11-01</td><td><b>-0.7238</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>30</td><td><b class='mono'>2390626617001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 469000</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>PROVESA SCC</div></td><td>2024-01-02</td><td><b>-0.7237</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>31</td><td><b class='mono'>2390626617001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 469000</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>PROVESA SCC</div></td><td>2024-03-01</td><td><b>-0.7235</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>32</td><td><b class='mono'>0990004196001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>CORPORACION EL ROSADO S.A.</div></td><td>2024-02-01</td><td><b>-0.7235</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>33</td><td><b class='mono'>2390626617001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 469000</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>PROVESA SCC</div></td><td>2024-05-01</td><td><b>-0.7234</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>34</td><td><b class='mono'>2390626617001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 469000</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>PROVESA SCC</div></td><td>2024-02-01</td><td><b>-0.7234</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>35</td><td><b class='mono'>0992526742001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>DINADEC S.A.</div></td><td>2024-06-01</td><td><b>-0.7233</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>36</td><td><b class='mono'>0992526742001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>DINADEC S.A.</div></td><td>2024-10-01</td><td><b>-0.7231</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>37</td><td><b class='mono'>0993385974001</b> <span class='badge b-azul'>Estrato C2</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>IBENPHARMA S.A.</div></td><td>2024-10-01</td><td><b>-0.7230</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>38</td><td><b class='mono'>1791411099001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>AC BEBIDAS ECUADOR ACBE CIA.LTDA.</div></td><td>2024-12-01</td><td><b>-0.7229</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>39</td><td><b class='mono'>0990004196001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>CORPORACION EL ROSADO S.A.</div></td><td>2024-05-01</td><td><b>-0.7226</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>40</td><td><b class='mono'>0993385974001</b> <span class='badge b-azul'>Estrato C2</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>IBENPHARMA S.A.</div></td><td>2024-07-01</td><td><b>-0.7223</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>41</td><td><b class='mono'>0992526742001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>DINADEC S.A.</div></td><td>2024-03-01</td><td><b>-0.7222</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>42</td><td><b class='mono'>0990004196001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>CORPORACION EL ROSADO S.A.</div></td><td>2024-08-01</td><td><b>-0.7222</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>43</td><td><b class='mono'>0993367439001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>GDFSE S.A.S.</div></td><td>2024-08-01</td><td><b>-0.7221</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>44</td><td><b class='mono'>2390626617001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 469000</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>PROVESA SCC</div></td><td>2024-06-01</td><td><b>-0.7219</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>45</td><td><b class='mono'>2390626617001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 469000</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>PROVESA SCC</div></td><td>2024-08-01</td><td><b>-0.7216</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>46</td><td><b class='mono'>0992526742001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>DINADEC S.A.</div></td><td>2024-04-01</td><td><b>-0.7214</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>47</td><td><b class='mono'>0993367439001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>GDFSE S.A.S.</div></td><td>2024-10-01</td><td><b>-0.7207</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>48</td><td><b class='mono'>2390626617001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 469000</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>PROVESA SCC</div></td><td>2024-04-01</td><td><b>-0.7206</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>49</td><td><b class='mono'>0990004196001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>CORPORACION EL ROSADO S.A.</div></td><td>2024-06-01</td><td><b>-0.7205</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>50</td><td><b class='mono'>0990004196001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>CORPORACION EL ROSADO S.A.</div></td><td>2024-04-01</td><td><b>-0.7205</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+</tbody></table></div>
+</div>
+<div class='panel' id='p_by_quarter' style='display:none'>
+<div style="overflow-x:auto"><table class="data"><thead><tr>
+<th>#</th>
+<th>Contribuyente (RUC / Razón Social / Actividad)</th>
+<th>Fecha</th>
+<th>Score</th>
+<th>Estado</th>
+</tr></thead><tbody>
+<tr><td>1</td><td><b class='mono'>1790010937001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO PICHINCHA CA</div></td><td>2024-10-03</td><td><b>-0.7496</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>2</td><td><b class='mono'>2390626617001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 469000</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>PROVESA SCC</div></td><td>2024-10-01</td><td><b>-0.7349</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>3</td><td><b class='mono'>0993367439001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>GDFSE S.A.S.</div></td><td>2024-01-01</td><td><b>-0.7336</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>4</td><td><b class='mono'>0993385974001</b> <span class='badge b-azul'>Estrato C2</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>IBENPHARMA S.A.</div></td><td>2024-10-01</td><td><b>-0.7310</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>5</td><td><b class='mono'>0993367439001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>GDFSE S.A.S.</div></td><td>2024-10-01</td><td><b>-0.7309</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>6</td><td><b class='mono'>2390626617001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 469000</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>PROVESA SCC</div></td><td>2024-01-02</td><td><b>-0.7290</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>7</td><td><b class='mono'>2390626617001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 469000</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>PROVESA SCC</div></td><td>2024-07-01</td><td><b>-0.7275</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>8</td><td><b class='mono'>0993367439001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>GDFSE S.A.S.</div></td><td>2024-07-01</td><td><b>-0.7273</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>9</td><td><b class='mono'>0993385974001</b> <span class='badge b-azul'>Estrato C2</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>IBENPHARMA S.A.</div></td><td>2024-07-01</td><td><b>-0.7271</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>10</td><td><b class='mono'>0993367439001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>GDFSE S.A.S.</div></td><td>2024-04-01</td><td><b>-0.7270</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>11</td><td><b class='mono'>0992526742001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>DINADEC S.A.</div></td><td>2024-10-01</td><td><b>-0.7240</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>12</td><td><b class='mono'>2390626617001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 469000</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>PROVESA SCC</div></td><td>2024-04-01</td><td><b>-0.7233</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>13</td><td><b class='mono'>0993385974001</b> <span class='badge b-azul'>Estrato C2</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>IBENPHARMA S.A.</div></td><td>2024-04-01</td><td><b>-0.7216</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>14</td><td><b class='mono'>1790010937001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO PICHINCHA CA</div></td><td>2024-07-03</td><td><b>-0.7199</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>15</td><td><b class='mono'>1790010937001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO PICHINCHA CA</div></td><td>2024-04-03</td><td><b>-0.7196</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>16</td><td><b class='mono'>1790010937001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO PICHINCHA CA</div></td><td>2024-01-03</td><td><b>-0.7191</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>17</td><td><b class='mono'>1793194697001</b> <span class='badge b-azul'>Estrato C3</span> <span class='badge b-gris'>CIIU 841211</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>FUNDACION PROSPERAR SALUD</div></td><td>2024-10-17</td><td><b>-0.7180</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>18</td><td><b class='mono'>1793194697001</b> <span class='badge b-azul'>Estrato C3</span> <span class='badge b-gris'>CIIU 841211</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>FUNDACION PROSPERAR SALUD</div></td><td>2024-07-23</td><td><b>-0.7173</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>19</td><td><b class='mono'>1791411099001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>AC BEBIDAS ECUADOR ACBE CIA.LTDA.</div></td><td>2024-10-01</td><td><b>-0.7163</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>20</td><td><b class='mono'>1791411099001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>AC BEBIDAS ECUADOR ACBE CIA.LTDA.</div></td><td>2024-04-01</td><td><b>-0.7132</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>21</td><td><b class='mono'>0992526742001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>DINADEC S.A.</div></td><td>2024-01-02</td><td><b>-0.7127</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>22</td><td><b class='mono'>0990789061001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>DISTRIBUIDORA IMPORTADORA DIPOR S.A.</div></td><td>2024-01-01</td><td><b>-0.7117</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>23</td><td><b class='mono'>0992526742001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>DINADEC S.A.</div></td><td>2024-04-01</td><td><b>-0.7113</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>24</td><td><b class='mono'>1791411099001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>AC BEBIDAS ECUADOR ACBE CIA.LTDA.</div></td><td>2024-01-01</td><td><b>-0.7108</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>25</td><td><b class='mono'>0992526742001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>DINADEC S.A.</div></td><td>2024-07-01</td><td><b>-0.7104</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>26</td><td><b class='mono'>0990789061001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>DISTRIBUIDORA IMPORTADORA DIPOR S.A.</div></td><td>2024-10-01</td><td><b>-0.7103</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>27</td><td><b class='mono'>0990789061001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>DISTRIBUIDORA IMPORTADORA DIPOR S.A.</div></td><td>2024-04-01</td><td><b>-0.7088</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>28</td><td><b class='mono'>1791411099001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>AC BEBIDAS ECUADOR ACBE CIA.LTDA.</div></td><td>2024-07-01</td><td><b>-0.7049</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>29</td><td><b class='mono'>0990789061001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>DISTRIBUIDORA IMPORTADORA DIPOR S.A.</div></td><td>2024-07-01</td><td><b>-0.7028</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>30</td><td><b class='mono'>0190061264001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>INDURAMA ECUADOR S.A.</div></td><td>2024-10-03</td><td><b>-0.7025</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>31</td><td><b class='mono'>0703079301001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 464922</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>MATUTE ESPINOZA YOCONDA DEL CISNE</div></td><td>2024-10-01</td><td><b>-0.7006</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>32</td><td><b class='mono'>1802646925001</b> <span class='badge b-azul'>Estrato B2</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>HARO JACOME HOMERO BENIGNO</div></td><td>2024-02-29</td><td><b>-0.6985</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>33</td><td><b class='mono'>0703079301001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 464922</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>MATUTE ESPINOZA YOCONDA DEL CISNE</div></td><td>2024-01-01</td><td><b>-0.6972</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>34</td><td><b class='mono'>0991504990001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 861002</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>FUNDACION DAMAS DEL HONORABLE CUERPO CONSULAR DE GUAYAQUIL</div></td><td>2024-10-01</td><td><b>-0.6948</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>35</td><td><b class='mono'>0992795565001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 463011</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>ERICORLA S.A.</div></td><td>2024-10-01</td><td><b>-0.6940</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>36</td><td><b class='mono'>0703079301001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 464922</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>MATUTE ESPINOZA YOCONDA DEL CISNE</div></td><td>2024-07-01</td><td><b>-0.6928</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>37</td><td><b class='mono'>1790005739001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>THE TESALIA SPRINGS COMPANY S.A.</div></td><td>2024-10-01</td><td><b>-0.6927</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>38</td><td><b class='mono'>1791840712001</b> <span class='badge b-azul'>Estrato B2</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>AURELIAN ECUADOR S.A.</div></td><td>2024-10-07</td><td><b>-0.6908</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>39</td><td><b class='mono'>0703079301001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 464922</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>MATUTE ESPINOZA YOCONDA DEL CISNE</div></td><td>2024-04-01</td><td><b>-0.6898</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>40</td><td><b class='mono'>0190061264001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>INDURAMA ECUADOR S.A.</div></td><td>2024-04-01</td><td><b>-0.6873</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>41</td><td><b class='mono'>1791840712001</b> <span class='badge b-azul'>Estrato B2</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>AURELIAN ECUADOR S.A.</div></td><td>2024-01-17</td><td><b>-0.6867</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>42</td><td><b class='mono'>0991263292001</b> <span class='badge b-azul'>Estrato B2</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>EXCOLINSA S.A.</div></td><td>2024-12-27</td><td><b>-0.6854</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>43</td><td><b class='mono'>0991504990001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 861002</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>FUNDACION DAMAS DEL HONORABLE CUERPO CONSULAR DE GUAYAQUIL</div></td><td>2024-07-01</td><td><b>-0.6847</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>44</td><td><b class='mono'>1790005739001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>THE TESALIA SPRINGS COMPANY S.A.</div></td><td>2024-01-02</td><td><b>-0.6841</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>45</td><td><b class='mono'>0990004196001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>CORPORACION EL ROSADO S.A.</div></td><td>2024-10-01</td><td><b>-0.6840</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>46</td><td><b class='mono'>1791840712001</b> <span class='badge b-azul'>Estrato B2</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>AURELIAN ECUADOR S.A.</div></td><td>2024-07-04</td><td><b>-0.6836</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>47</td><td><b class='mono'>1791840712001</b> <span class='badge b-azul'>Estrato B2</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>AURELIAN ECUADOR S.A.</div></td><td>2024-04-08</td><td><b>-0.6834</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>48</td><td><b class='mono'>0991504990001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 861002</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>FUNDACION DAMAS DEL HONORABLE CUERPO CONSULAR DE GUAYAQUIL</div></td><td>2024-04-01</td><td><b>-0.6827</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>49</td><td><b class='mono'>0991504990001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 861002</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>FUNDACION DAMAS DEL HONORABLE CUERPO CONSULAR DE GUAYAQUIL</div></td><td>2024-01-01</td><td><b>-0.6823</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>50</td><td><b class='mono'>0190061264001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>INDURAMA ECUADOR S.A.</div></td><td>2024-01-03</td><td><b>-0.6820</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+</tbody></table></div>
+</div>
+<div class='panel' id='p_by_year' style='display:none'>
+<div style="overflow-x:auto"><table class="data"><thead><tr>
+<th>#</th>
+<th>Contribuyente (RUC / Razón Social / Actividad)</th>
+<th>Fecha</th>
+<th>Score</th>
+<th>Estado</th>
+</tr></thead><tbody>
+<tr><td>1</td><td><b class='mono'>0993385974001</b> <span class='badge b-azul'>Estrato C2</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>IBENPHARMA S.A.</div></td><td>2024-02-10</td><td><b>-0.7447</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>2</td><td><b class='mono'>1790010937001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO PICHINCHA CA</div></td><td>2024-01-03</td><td><b>-0.7392</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>3</td><td><b class='mono'>2390626617001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 469000</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>PROVESA SCC</div></td><td>2024-01-02</td><td><b>-0.7371</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>4</td><td><b class='mono'>0993367439001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 477201</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>GDFSE S.A.S.</div></td><td>2024-01-01</td><td><b>-0.7332</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>5</td><td><b class='mono'>0990049459001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO GUAYAQUIL S.A.</div></td><td>2024-01-02</td><td><b>-0.7269</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>6</td><td><b class='mono'>0703079301001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 464922</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>MATUTE ESPINOZA YOCONDA DEL CISNE</div></td><td>2024-01-01</td><td><b>-0.7255</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>7</td><td><b class='mono'>1793194697001</b> <span class='badge b-azul'>Estrato C3</span> <span class='badge b-gris'>CIIU 841211</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>FUNDACION PROSPERAR SALUD</div></td><td>2024-03-16</td><td><b>-0.7095</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>8</td><td><b class='mono'>0990004196001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>CORPORACION EL ROSADO S.A.</div></td><td>2024-01-01</td><td><b>-0.7092</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>9</td><td><b class='mono'>1791840712001</b> <span class='badge b-azul'>Estrato B2</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>AURELIAN ECUADOR S.A.</div></td><td>2024-01-17</td><td><b>-0.6998</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>10</td><td><b class='mono'>0991263292001</b> <span class='badge b-azul'>Estrato B2</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>EXCOLINSA S.A.</div></td><td>2024-12-27</td><td><b>-0.6984</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>11</td><td><b class='mono'>1802646925001</b> <span class='badge b-azul'>Estrato B2</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>HARO JACOME HOMERO BENIGNO</div></td><td>2024-02-29</td><td><b>-0.6978</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>12</td><td><b class='mono'>0992795565001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 463011</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>ERICORLA S.A.</div></td><td>2024-01-02</td><td><b>-0.6966</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>13</td><td><b class='mono'>0992570792001</b> <span class='badge b-azul'>Estrato C2</span> <span class='badge b-gris'>CIIU 469000</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>CENTRO DE COMERCIO GUALLI CIA. LTDA.</div></td><td>2024-01-01</td><td><b>-0.6952</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>14</td><td><b class='mono'>1792469619001</b> <span class='badge b-azul'>Estrato B2</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>PUENTES Y CALZADAS INFRAESTRUCTURAS S.L.</div></td><td>2024-09-30</td><td><b>-0.6946</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>15</td><td><b class='mono'>0991504990001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 861002</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>FUNDACION DAMAS DEL HONORABLE CUERPO CONSULAR DE GUAYAQUIL</div></td><td>2024-01-01</td><td><b>-0.6911</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>16</td><td><b class='mono'>0591736809001</b> <span class='badge b-azul'>Estrato C1</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>GAS SUCRE</div></td><td>2024-01-01</td><td><b>-0.6900</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>17</td><td><b class='mono'>0992526742001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>DINADEC S.A.</div></td><td>2024-01-02</td><td><b>-0.6899</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>18</td><td><b class='mono'>0190072002001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>GERARDO ORTIZ E HIJOS CIA LTDA</div></td><td>2024-01-01</td><td><b>-0.6892</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>19</td><td><b class='mono'>1791411099001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>AC BEBIDAS ECUADOR ACBE CIA.LTDA.</div></td><td>2024-01-01</td><td><b>-0.6859</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>20</td><td><b class='mono'>1790283380001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO DINERS CLUB DEL ECUADOR S.A.</div></td><td>2024-01-01</td><td><b>-0.6857</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>21</td><td><b class='mono'>1304045303001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 471101</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>URETA MENDOZA YIMMY ANTONIO</div></td><td>2024-01-01</td><td><b>-0.6854</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>22</td><td><b class='mono'>0993149675001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 472109</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>COMJAESC S.A.</div></td><td>2024-01-02</td><td><b>-0.6811</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>23</td><td><b class='mono'>0990005737001</b> <span class='badge b-azul'>Estrato B1</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BANCO DEL PACIFICO S.A.</div></td><td>2024-01-02</td><td><b>-0.6807</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>24</td><td><b class='mono'>0791842674001</b> <span class='badge b-azul'>Estrato D, sin pro</span> <span class='badge b-gris'>CIIU 410010</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>CONSTRUCTORA NUEVASVIAS S.A.</div></td><td>2024-11-05</td><td><b>-0.6781</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>25</td><td><b class='mono'>0990789061001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>DISTRIBUIDORA IMPORTADORA DIPOR S.A.</div></td><td>2024-01-01</td><td><b>-0.6776</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>26</td><td><b class='mono'>1391851901001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 591202</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>FIVE STARS CINEMA-STARCINEMA FSCS S.A.</div></td><td>2024-01-01</td><td><b>-0.6762</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>27</td><td><b class='mono'>1391748485001</b> <span class='badge b-azul'>Estrato C2</span> <span class='badge b-gris'>CIIU 464124</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>IMPORTACIONES SELECTAS S.A.</div></td><td>2024-01-02</td><td><b>-0.6761</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>28</td><td><b class='mono'>0990018707001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>ECUAQUIMICA ECUATORIANA DE PRODUCTOS QUIMICOS CA</div></td><td>2024-01-02</td><td><b>-0.6740</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>29</td><td><b class='mono'>1790060896001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 492102</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>COOPERATIVA DE TRANSPORTES ZARACAY</div></td><td>2024-01-01</td><td><b>-0.6732</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>30</td><td><b class='mono'>1391854102001</b> <span class='badge b-azul'>Estrato C2</span> <span class='badge b-gris'>CIIU 464124</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>MACROSELENITA S.A.</div></td><td>2024-01-02</td><td><b>-0.6722</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>31</td><td><b class='mono'>1793192139001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 471101</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>DICODAN S.A.S.</div></td><td>2024-01-02</td><td><b>-0.6711</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>32</td><td><b class='mono'>1790005739001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>THE TESALIA SPRINGS COMPANY S.A.</div></td><td>2024-01-02</td><td><b>-0.6702</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>33</td><td><b class='mono'>0190061264001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>INDURAMA ECUADOR S.A.</div></td><td>2024-01-03</td><td><b>-0.6680</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>34</td><td><b class='mono'>0190007510001</b> <span class='badge b-azul'>Estrato B1</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>ALMACENES JUAN ELJURI CÍA. LTDA.</div></td><td>2024-01-02</td><td><b>-0.6680</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>35</td><td><b class='mono'>0992367318001</b> <span class='badge b-azul'>Estrato B2</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>CONSORCIO INMOBILIARIO VELASCO S.A. CONVEL</div></td><td>2024-11-06</td><td><b>-0.6666</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>36</td><td><b class='mono'>0907228712001</b> <span class='badge b-azul'>Estrato B3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>BARZOLA BARAHONA MARIA DOLORES</div></td><td>2024-12-09</td><td><b>-0.6658</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>37</td><td><b class='mono'>1790041220001</b> <span class='badge b-azul'>Estrato B1</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>COMERCIAL KYWI S.A.</div></td><td>2024-01-02</td><td><b>-0.6647</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>38</td><td><b class='mono'>0966783755001</b> <span class='badge b-azul'>Estrato B3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>ZHANG ZHILIN</div></td><td>2024-12-11</td><td><b>-0.6598</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>39</td><td><b class='mono'>1802114429001</b> <span class='badge b-azul'>Estrato C3</span> <span class='badge b-gris'>CIIU 471102</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>VEGA SOLIS SONNA JUDITH</div></td><td>2024-01-02</td><td><b>-0.6595</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>40</td><td><b class='mono'>0190436977001</b> <span class='badge b-azul'>Estrato C2</span> <span class='badge b-gris'>CIIU 469000</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>COMERCIALIZADORA DE ABARROTES Y OTROS PANDO&amp;PANDO HIPERMERCADO PANDO CIA. LTDA.</div></td><td>2024-01-01</td><td><b>-0.6594</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>41</td><td><b class='mono'>2190000063001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 492102</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>COOPERATIVA DE TRANSPORTE INTERPROVINCIAL PUTUMAYO</div></td><td>2024-01-01</td><td><b>-0.6583</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>42</td><td><b class='mono'>0190003701001</b> <span class='badge b-azul'>Estrato A3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>IMPORTADORA TOMEBAMBA S.A.</div></td><td>2024-01-02</td><td><b>-0.6562</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>43</td><td><b class='mono'>0195129053001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 471101</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>MEGASSI CIA LTDA</div></td><td>2024-01-01</td><td><b>-0.6561</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>44</td><td><b class='mono'>1791984722001</b> <span class='badge b-azul'>Estrato B1</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>FARMAENLACE CIA. LTDA.</div></td><td>2024-01-01</td><td><b>-0.6559</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>45</td><td><b class='mono'>1793160875001</b> <span class='badge b-azul'>Estrato C2</span> <span class='badge b-gris'>CIIU 681001</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>ESTRATEGIA-COMERCIAL-ECUADOR-ECIAL S.A.S.</div></td><td>2024-01-01</td><td><b>-0.6538</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>46</td><td><b class='mono'>1790370240001</b> <span class='badge b-azul'>Estrato B1</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>COMPAÑIA VERDU SOCIEDAD ANONIMA</div></td><td>2024-02-28</td><td><b>-0.6535</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>47</td><td><b class='mono'>0993371900001</b> <span class='badge b-azul'>Estrato C3</span> <span class='badge b-gris'>CIIU 381100</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>ECO-ECUAMARE S.A.S.</div></td><td>2024-01-02</td><td><b>-0.6529</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>48</td><td><b class='mono'>1391932682001</b> <span class='badge b-azul'>Estrato C1</span> <span class='badge b-gris'>CIIU 471102</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>SUPERMERCADOS JAHELITA S.C.C</div></td><td>2024-01-02</td><td><b>-0.6502</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>49</td><td><b class='mono'>0993390460001</b> <span class='badge b-azul'>Estrato B3</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>SANVVICE S.A.S.</div></td><td>2024-08-31</td><td><b>-0.6498</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+<tr><td>50</td><td><b class='mono'>0591755064001</b> <span class='badge b-azul'>Estrato C2</span> <span class='badge b-gris'>CIIU 471102</span><div style='font-weight:600;color:#123c5b;font-size:12.5px'>ZAVAMEGACORP CIA. LTDA.</div></td><td>2024-01-02</td><td><b>-0.6495</b></td><td><span class="badge b-gris">Top Ranking</span></td></tr>
+</tbody></table></div>
+</div>
+</div></div></details>
+<footer>validacionv3.py — 2026-11-17 16:58 — SRI Ecuador / CIAT e-IAD</footer>
+</div><script>
+function tab(id,btn){
+  var ps=document.getElementsByClassName('panel');
+  for(var i=0;i<ps.length;i++) ps[i].style.display='none';
+  document.getElementById(id).style.display='block';
+  var bs=document.getElementsByClassName('tabbtn');
+  for(var i=0;i<bs.length;i++) bs[i].classList.remove('activo');
+  btn.classList.add('activo');
+}
+function renderChart(divId){
+  if(ECHARTS_DONE[divId]) return;
+  var el=document.getElementById(divId);
+  if(!el || !ECHARTS_PENDING[divId]) return;
+  var ch=echarts.init(el);
+  ch.setOption(ECHARTS_PENDING[divId]);
+  ECHARTS_DONE[divId]=ch;
+  window.addEventListener('resize', function(){ ch.resize(); });
+}
+document.addEventListener('DOMContentLoaded', function(){
+  document.querySelectorAll('details.sec').forEach(function(d){
+    d.addEventListener('toggle', function(){
+      if(d.open){
+        d.querySelectorAll('.chart-sm').forEach(function(c){ renderChart(c.id); });
+      }
+    });
+  });
+  document.querySelectorAll('details.sec[open] .chart-sm')
+    .forEach(function(el){ renderChart(el.id); });
+});
+</script></body></html>
