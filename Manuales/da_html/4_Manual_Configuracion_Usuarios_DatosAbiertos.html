@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Manual de Configuración de Usuarios SSH — Datos Abiertos Facturación</title>
+<style>
+  @page { size: A4; margin: 2.5cm 2cm 2cm 2cm; }
+  body { font-family: "Calibri","Arial",sans-serif; font-size: 11pt; line-height: 1.4; color:#000; margin:0; padding:0; }
+  h1 { font-size:20pt; color:#1f4e79; border-bottom:3px solid #2e75b6; padding-bottom:6pt; margin-top:18pt; margin-bottom:6pt; text-transform:uppercase; letter-spacing:.5pt; page-break-after:avoid; }
+  h2 { font-size:14pt; color:#1f4e79; border-left:4pt solid #2e75b6; padding-left:10pt; margin-top:18pt; margin-bottom:10pt; page-break-after:avoid; }
+  h3 { font-size:12pt; color:#2e75b6; margin-top:14pt; margin-bottom:8pt; border-bottom:1pt dashed #bdd7ee; padding-bottom:3pt; page-break-after:avoid; }
+  h4 { font-size:11pt; color:#000; margin-top:10pt; margin-bottom:6pt; font-style:italic; page-break-after:avoid; }
+  p { margin-top:4pt; margin-bottom:4pt; text-align:justify; }
+  table { width:100%; border-collapse:collapse; margin:8pt 0 12pt 0; font-size:10pt; page-break-inside:avoid; }
+  th { background-color:#2e75b6; color:#fff; text-align:left; padding:6pt 8pt; border:1pt solid #1f4e79; font-weight:bold; }
+  td { padding:6pt 8pt; border:1pt solid #bfbfbf; vertical-align:top; }
+  tr:nth-child(even) { background-color:#f2f2f2; }
+  .code-block { background-color:#f2f2f2; border:1pt solid #d9d9d9; padding:8pt 10pt; margin:6pt 0 10pt 0; font-family:"Consolas","Courier New",monospace; font-size:9pt; line-height:1.5; white-space:pre; overflow-x:auto; page-break-inside:avoid; }
+  .code-block .comment { color:#008000; font-style:italic; }
+  .code-block .var { color:#c00000; font-weight:bold; }
+  .inline-code { background-color:#f2f2f2; padding:1pt 3pt; font-family:"Consolas","Courier New",monospace; font-size:10pt; color:#c00000; }
+  .info-box { background-color:#e7f3ff; border-left:3pt solid #2e75b6; padding:8pt 10pt; margin:8pt 0; page-break-inside:avoid; }
+  .alert-box { background-color:#fff2f2; border-left:3pt solid #c00000; padding:8pt 10pt; margin:8pt 0; page-break-inside:avoid; }
+  .ok-box { background-color:#eefaf0; border-left:3pt solid #2e9b57; padding:8pt 10pt; margin:8pt 0; page-break-inside:avoid; }
+  .ctx-box { background-color:#fff8e7; border:1pt solid #e0a800; border-left:4pt solid #e0a800; padding:6pt 10pt; margin:8pt 0; font-size:10pt; page-break-inside:avoid; }
+  .ctx-box strong { color:#8a6d00; }
+  .skip-box { background-color:#eaf4fb; border:1pt dashed #2e75b6; border-left:4pt solid #2e75b6; padding:6pt 10pt; margin:8pt 0; font-size:10pt; page-break-inside:avoid; }
+  .skip-box strong { color:#1f4e79; }
+  ul, ol { margin-top:4pt; margin-bottom:6pt; padding-left:20pt; }
+  li { margin-bottom:3pt; }
+  .footer { margin-top:24pt; padding-top:10pt; border-top:1pt solid #bdd7ee; font-size:9pt; color:#595959; text-align:center; }
+  .page-break { page-break-before:always; }
+</style>
+</head>
+<body>
+
+<h1>Manual de Configuración de Usuarios SSH</h1>
+<p style="font-size:13pt; color:#1f4e79; margin-top:0;"><strong>Datos Abiertos Facturación — Copia de archivos entre servidores</strong></p>
+
+<table>
+  <tr><td><strong>Resumen</strong></td><td>Configuración de usuarios para la copia de archivos entre el servidor del ETL y los servidores de descargas del aplicativo Datos Abiertos Facturación.</td></tr>
+  <tr><td><strong>Alcance</strong></td><td>Creación del usuario <span class="inline-code">datos_abiertos</span>, configuración de SSH con llaves ed25519 y validación de permisos de escritura remota. Este manual no tiene equivalente en Trazabilidad Fiscal.</td></tr>
+  <tr><td><strong>Orden de ejecución</strong></td><td>Manual 4 de 5: 1) Infraestructura → 2) Python 3.13.5 → 3) Wallet Oracle → 4) Usuarios SSH → 5) Despliegue</td></tr>
+  <tr><td><strong>Usuarios de ejecución</strong></td><td><span class="inline-code">root</span>/sudo en los servidores de descargas; <span class="inline-code">python</span> en el servidor de Ingeniería de Datos.</td></tr>
+  <tr><td><strong>Servidores</strong></td><td>Python Producción 10.2.2.218 (usuario python) · Descargas Quito 10.1.15.11 (datos_abiertos) · Descargas Guayaquil 10.11.0.15 (datos_abiertos)</td></tr>
+</table>
+
+<h3>Revisiones al Documento</h3>
+<table>
+  <tr><th>Fecha</th><th>Autor</th><th>Descripción</th></tr>
+  <tr><td>08/07/2024</td><td>Marcelo Lobato</td><td>Emisión inicial</td></tr>
+  <tr><td>01/03/2026</td><td>Jimmy A. González</td><td>Corrección de rutas SSH y nombres de carpeta</td></tr>
+  <tr><td>Junio 2026</td><td>Jimmy A. González</td><td>Reformateo al estándar de la serie. IP de producción 10.2.2.218. Bloque de verificación rápida inicial y skip-box por sección. Corrección de los comandos scp multilínea (saltos de continuación rotos) y limpieza de enlaces incrustados en las direcciones root@IP.</td></tr>
+</table>
+
+<div class="ctx-box">
+<strong>📍 Quién ejecuta qué:</strong> las secciones I y III se ejecutan como <span class="inline-code">root</span> (o sudo) en cada servidor de descargas. Las secciones 0, II y IV se ejecutan como <span class="inline-code">python</span> en el servidor de Ingeniería de Datos (10.2.2.218).
+</div>
+
+<h2>0. Verificación Rápida — Paso a Paso</h2>
+<div class="ok-box">
+<strong>✅ Atajo.</strong> Si la copia entre servidores ya fue configurada antes, ejecute como usuario <span class="inline-code">python</span> en 10.2.2.218 el bloque siguiente. <strong>Si TODAS las líneas imprimen <span class="inline-code">[OK]</span></strong>, la conexión y la escritura remota ya están configuradas: <strong>puede saltar directamente al Manual 5 (Despliegue)</strong>. Si alguna imprime <span class="inline-code">[FALTA]</span>, vaya únicamente a la sección indicada entre corchetes.
+</div>
+<div class="code-block"><span class="comment"># === VERIFICACIÓN RÁPIDA DE COPIA SSH - Datos Abiertos ===</span>
+<span class="comment"># Ejecutar como usuario python EN 10.2.2.218. Cada línea reporta [OK] o [FALTA].</span>
+KEY="/home/python/.ssh/sri_datos_abiertos_key"
+REMOTE_PATH="/opt/rh/jbcs-httpd24/root/var/www/html/descargas/downloads/datosAbiertosFacturacion"
+
+<span class="comment"># [Sec. 0/II] Llave privada ed25519 presente y con permisos 600</span>
+[ -f "$KEY" ] && [ "$(stat -c '%a' "$KEY" 2>/dev/null)" = "600" ] && echo "[OK] llave SSH local" || echo "[FALTA] -> Seccion II (ssh-keygen)"
+
+<span class="comment"># [Sec. III/IV] Conexión SSH por llave a Quito (sin password, timeout corto)</span>
+ssh -i "$KEY" -o BatchMode=yes -o ConnectTimeout=8 datos_abiertos@10.1.15.11 "echo ok" >/dev/null 2>&1 \
+  && echo "[OK] conecta Quito 10.1.15.11" || echo "[FALTA] -> Seccion III (authorized_keys Quito)"
+
+<span class="comment"># [Sec. III/IV] Conexión SSH por llave a Guayaquil</span>
+ssh -i "$KEY" -o BatchMode=yes -o ConnectTimeout=8 datos_abiertos@10.11.0.15 "echo ok" >/dev/null 2>&1 \
+  && echo "[OK] conecta Guayaquil 10.11.0.15" || echo "[FALTA] -> Seccion III (authorized_keys Guayaquil)"
+
+<span class="comment"># [Sec. I/IV] Escritura efectiva en la ruta remota de Quito (prueba real y limpieza)</span>
+ssh -i "$KEY" -o BatchMode=yes -o ConnectTimeout=8 datos_abiertos@10.1.15.11 \
+  "touch $REMOTE_PATH/.probe_$$ && rm -f $REMOTE_PATH/.probe_$$" >/dev/null 2>&1 \
+  && echo "[OK] escritura remota Quito" || echo "[FALTA] -> Seccion I (permisos REMOTE_PATH)"</div>
+<div class="info-box">
+Este bloque solo puede comprobar lo verificable desde el servidor <span class="inline-code">python</span>: la llave local, la conexión por llave y la escritura efectiva en el remoto. La creación del usuario <span class="inline-code">datos_abiertos</span> y del directorio de descargas (secciones I y III) ocurre en los servidores remotos como root; si la conexión o la escritura fallan, esas secciones son el lugar a revisar.
+</div>
+
+<h3>0.1 Verificación del Usuario python en el Servidor de Ingeniería de Datos</h3>
+<div class="ctx-box">
+<strong>📍 Antes de generar llaves,</strong> confirme en 10.2.2.218 que trabaja como <span class="inline-code">python</span> y que <span class="inline-code">~/.ssh</span> existe con permisos correctos (sin esto, <span class="inline-code">ssh-keygen</span> y <span class="inline-code">ssh</span> fallan).
+</div>
+<div class="code-block">whoami                         <span class="comment"># Esperado: python</span>
+id python                      <span class="comment"># grupo python (+ wheel para sudo)</span>
+<span class="comment"># Crear ~/.ssh si no existe (sin sudo, es del propio usuario)</span>
+mkdir -p /home/python/.ssh
+chmod 700 /home/python/.ssh
+ls -ld /home/python/.ssh       <span class="comment"># Esperado: drwx------ python python</span></div>
+
+<h2 class="page-break">I. Configuración en Servidores de Descargas (10.1.15.11 y 10.11.0.15)</h2>
+<div class="ctx-box">
+<strong>📍 Ejecutar como <span class="inline-code">root</span></strong> (o sudo) en CADA servidor de descargas. Repita las tres subsecciones en Quito y en Guayaquil.
+</div>
+<div class="skip-box">
+<strong>⏭️ Verificación previa (en cada remoto, como root).</strong> Si <span class="inline-code">id datos_abiertos</span> ya existe y la ruta de descarga tiene permiso de escritura para ese usuario (compruébelo con <span class="inline-code">su - datos_abiertos -c "touch $REMOTE_PATH/.t && rm $REMOTE_PATH/.t && echo OK"</span>), <strong>salte a la sección II</strong>.
+</div>
+
+<h3>1.1 Crear usuario del sistema operativo (como root o sudo)</h3>
+<div class="code-block">useradd datos_abiertos
+passwd datos_abiertos    <span class="comment"># Establecer contraseña si es requerido</span></div>
+
+<h3>1.2 Crear directorio .ssh con permisos seguros</h3>
+<div class="code-block">mkdir -p /home/datos_abiertos/.ssh
+chmod 700 /home/datos_abiertos/.ssh
+chown datos_abiertos:datos_abiertos /home/datos_abiertos/.ssh</div>
+
+<h3>1.3 Verificar/crear ruta de descarga con permisos de escritura</h3>
+<div class="code-block"><span class="comment"># Ruta esperada por el script datos_abiertos.bash:</span>
+REMOTE_PATH="/opt/rh/jbcs-httpd24/root/var/www/html/descargas/downloads/datosAbiertosFacturacion"
+
+<span class="comment"># Crear si no existe, con permisos para el usuario datos_abiertos</span>
+mkdir -p "$REMOTE_PATH"
+chmod 775 "$REMOTE_PATH"
+chown datos_abiertos:datos_abiertos "$REMOTE_PATH"
+
+<span class="comment"># Validar que datos_abiertos puede escribir (sin sudo):</span>
+su - datos_abiertos -c "touch $REMOTE_PATH/test_write && rm $REMOTE_PATH/test_write && echo 'PERMISOS OK'"</div>
+
+<h2 class="page-break">II. Configuración en Servidor de Producción 10.2.2.218 (usuario python)</h2>
+<div class="skip-box">
+<strong>⏭️ Verificación previa.</strong> Si <span class="inline-code">ls -l /home/python/.ssh/sri_datos_abiertos_key</span> ya existe (con permisos 600), la llave ya está generada: <strong>salte a la sección III</strong> (o a la 2.3 si solo falta distribuir la pública).
+</div>
+
+<h3>2.1 Generar llave SSH ed25519</h3>
+<div class="code-block">ssh-keygen -t ed25519 -f /home/python/.ssh/sri_datos_abiertos_key -N ""</div>
+<ul>
+<li>No usar passphrase (el <span class="inline-code">-N ""</span> la deja vacía).</li>
+<li>Nombre sugerido: <span class="inline-code">sri_datos_abiertos_key</span> (ajustar a estándares de Infraestructura).</li>
+<li>El usuario ejecutor es <span class="inline-code">python</span>, no root.</li>
+</ul>
+
+<h3>2.2 Extraer llave pública para distribución</h3>
+<div class="code-block">cat /home/python/.ssh/sri_datos_abiertos_key.pub > /tmp/public_key.txt</div>
+
+<h3>2.3 Copiar llave pública a servidores remotos</h3>
+<div class="code-block">scp /tmp/public_key.txt root@10.1.15.11:/tmp/
+scp /tmp/public_key.txt root@10.11.0.15:/tmp/</div>
+<div class="info-box">
+<strong>Alternativa.</strong> Si <span class="inline-code">scp</span> no está disponible, usar WinSCP, un cliente SFTP gráfico o <span class="inline-code">rsync</span>.
+</div>
+
+<h2 class="page-break">III. Autorización en Servidores Remotos (como root)</h2>
+<div class="ctx-box">
+<strong>📍 Ejecutar como <span class="inline-code">root</span></strong> en CADA servidor de descargas (Quito y Guayaquil).
+</div>
+<div class="skip-box">
+<strong>⏭️ Verificación previa (en cada remoto).</strong> Si <span class="inline-code">grep -qF "$(cat /tmp/public_key.txt)" /home/datos_abiertos/.ssh/authorized_keys</span> no devuelve error (la pública ya está autorizada), <strong>salte a la sección IV</strong>.
+</div>
+
+<h3>3.1 Agregar la llave pública en cada servidor de descargas</h3>
+<div class="code-block">cat /tmp/public_key.txt >> /home/datos_abiertos/.ssh/authorized_keys
+chmod 600 /home/datos_abiertos/.ssh/authorized_keys
+chown -R datos_abiertos:datos_abiertos /home/datos_abiertos/.ssh</div>
+
+<h3>3.2 Configurar SSH para permitir autenticación por llave</h3>
+<p>En <span class="inline-code">/etc/ssh/sshd_config</span> verificar:</p>
+<div class="code-block">PubkeyAuthentication yes
+AuthorizedKeysFile .ssh/authorized_keys
+
+<span class="comment"># Reiniciar el servicio SSH solo si se modificó el archivo:</span>
+systemctl restart sshd</div>
+<div class="info-box">
+En RHEL 10 ambas directivas (<span class="inline-code">PubkeyAuthentication yes</span> y <span class="inline-code">AuthorizedKeysFile .ssh/authorized_keys</span>) ya son el valor por defecto del servidor OpenSSH; normalmente no hay que tocar nada. Revise también que no haya una directiva <span class="inline-code">Match</span> o un archivo en <span class="inline-code">/etc/ssh/sshd_config.d/</span> que las sobrescriba. Valide la sintaxis antes de reiniciar con <span class="inline-code">sshd -t</span>.
+</div>
+
+<h2 class="page-break">IV. Validación de Conectividad (usuario python)</h2>
+<h3>4.1 Probar conexión SSH</h3>
+<div class="code-block">ssh -i /home/python/.ssh/sri_datos_abiertos_key datos_abiertos@10.1.15.11 "echo 'Conexión Quito OK'"
+ssh -i /home/python/.ssh/sri_datos_abiertos_key datos_abiertos@10.11.0.15 "echo 'Conexión Guayaquil OK'"</div>
+
+<h3>4.2 Probar escritura en ruta remota (simulando la operación del script)</h3>
+<div class="alert-box">
+<strong>⚠️ Corrección.</strong> El manual previo tenía los <span class="inline-code">scp</span> partidos con <span class="inline-code">\</span> seguido de espacio, lo que rompía el comando al copiar. A continuación, comandos en una sola línea con variables, listos para pegar.
+</div>
+<div class="code-block"><span class="comment"># Definir variables una vez para no repetir rutas largas:</span>
+KEY="/home/python/.ssh/sri_datos_abiertos_key"
+REMOTE_PATH="/opt/rh/jbcs-httpd24/root/var/www/html/descargas/downloads/datosAbiertosFacturacion"
+
+<span class="comment"># Crear archivo de prueba local:</span>
+echo "Prueba $(date)" > /tmp/test_sync_$(date +%Y%m%d).txt
+
+<span class="comment"># Copiar a ambos servidores (Quito y Guayaquil):</span>
+scp -i "$KEY" /tmp/test_sync_*.txt datos_abiertos@10.1.15.11:"$REMOTE_PATH/"
+scp -i "$KEY" /tmp/test_sync_*.txt datos_abiertos@10.11.0.15:"$REMOTE_PATH/"</div>
+
+<h3>4.3 Verificar recepción y limpiar</h3>
+<div class="code-block">KEY="/home/python/.ssh/sri_datos_abiertos_key"
+REMOTE_PATH="/opt/rh/jbcs-httpd24/root/var/www/html/descargas/downloads/datosAbiertosFacturacion"
+
+<span class="comment"># Verificar en remoto:</span>
+ssh -i "$KEY" datos_abiertos@10.1.15.11 "ls -la $REMOTE_PATH/test_sync_*.txt"
+
+<span class="comment"># Limpieza post-validación (ambos servidores):</span>
+ssh -i "$KEY" datos_abiertos@10.1.15.11 "rm $REMOTE_PATH/test_sync_*.txt"
+ssh -i "$KEY" datos_abiertos@10.11.0.15 "rm $REMOTE_PATH/test_sync_*.txt"
+rm /tmp/test_sync_*.txt /tmp/public_key.txt</div>
+
+<h2 class="page-break">V. Solución de Problemas Comunes</h2>
+<table>
+  <tr><th>Descripción</th><th>Solución</th></tr>
+  <tr><td>Permission denied (publickey)</td><td>Revisar permisos de <span class="inline-code">.ssh</span> (700) y <span class="inline-code">authorized_keys</span> (600) en el remoto. Validar que la llave pública esté en <span class="inline-code">authorized_keys</span> y que se usa la llave correcta con <span class="inline-code">-i</span>.</td></tr>
+  <tr><td>Host key verification failed</td><td>Ejecutar <span class="inline-code">ssh-keygen -R 10.1.15.11</span>, o aceptar el fingerprint en la primera conexión manual.</td></tr>
+  <tr><td>No route to host / Timeout</td><td>Validar conectividad de red (ping, firewall), que el servidor remoto esté encendido y que el puerto 22 esté abierto.</td></tr>
+  <tr><td>Permission denied al escribir en REMOTE_PATH</td><td>En remoto: <span class="inline-code">chmod 775 &lt;ruta&gt;</span> y <span class="inline-code">chown datos_abiertos:datos_abiertos &lt;ruta&gt;</span>. Validar que <span class="inline-code">datos_abiertos</span> es dueño del directorio.</td></tr>
+  <tr><td>~/.ssh: No such file or directory al generar la llave</td><td>Crear el directorio primero: <span class="inline-code">mkdir -p /home/python/.ssh &amp;&amp; chmod 700 /home/python/.ssh</span> (sección 0.1).</td></tr>
+  <tr><td>SELinux bloquea la lectura de authorized_keys</td><td>En RHEL, si <span class="inline-code">.ssh</span> se creó por una vía no estándar, restaurar contexto: <span class="inline-code">restorecon -R -v /home/datos_abiertos/.ssh</span>. Revisar <span class="inline-code">ausearch -m avc -ts recent</span> si persiste.</td></tr>
+</table>
+
+<h2 class="page-break">VI. Referencias Técnicas</h2>
+<table>
+  <tr><th>Descripción</th><th>Valor / Ruta</th></tr>
+  <tr><td>Ruta REMOTE_PATH esperada</td><td><span class="inline-code">/opt/rh/jbcs-httpd24/root/var/www/html/descargas/downloads/datosAbiertosFacturacion</span></td></tr>
+  <tr><td>Usuario SSH en el script</td><td><span class="inline-code">REMOTE_USER="datos_abiertos"</span></td></tr>
+  <tr><td>Servidores remotos</td><td><span class="inline-code">REMOTE_SERVERS=("10.1.15.11" "10.11.0.15")</span></td></tr>
+  <tr><td>Tipo de llave requerida</td><td>ed25519 (más segura y rápida que RSA)</td></tr>
+  <tr><td>Permisos mínimos para .ssh</td><td>Directorio: 700 · authorized_keys: 600 · llave privada: 600</td></tr>
+  <tr><td>Nombre del proyecto</td><td><span class="inline-code">sri_datos_abiertos_facturacion</span> (guiones bajos)</td></tr>
+</table>
+
+<div class="footer">
+SRI — Ingeniería de Datos · Datos Abiertos Facturación · Manual de Configuración de Usuarios SSH · Junio 2026
+</div>
+
+</body>
+</html>

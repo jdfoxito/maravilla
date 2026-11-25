@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+
+<html lang="es">
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>Listado de Acciones — Preparación Servidor Producción sriapp44 — Trazabilidad Fiscal</title>
+
+<style>
+
+  body { font-family: Calibri, "Segoe UI", Arial, sans-serif; font-size: 11pt; color: #1a1a1a; max-width: 21cm; margin: 0 auto; padding: 1.5cm; line-height: 1.45; }
+
+  h1 { font-size: 18pt; color: #1F4E79; border-bottom: 3px solid #1F4E79; padding-bottom: 6px; }
+
+  h2 { font-size: 14pt; color: #1F4E79; border-bottom: 1px solid #9DC3E6; padding-bottom: 4px; margin-top: 28px; }
+
+  h3 { font-size: 12pt; color: #2E74B5; margin-top: 20px; }
+
+  h4 { font-size: 11pt; color: #2E74B5; font-style: italic; margin-top: 16px; }
+
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 10pt; }
+
+  th { background: #1F4E79; color: #fff; padding: 6px 8px; text-align: left; border: 1px solid #1F4E79; }
+
+  td { padding: 6px 8px; border: 1px solid #BFBFBF; vertical-align: top; }
+
+  tr:nth-child(even) td { background: #F2F7FC; }
+
+  pre { background: #1e1e2e; color: #e6e6e6; padding: 10px 14px; border-radius: 4px; font-family: Consolas, "Courier New", monospace; font-size: 9.5pt; overflow-x: auto; white-space: pre-wrap; }
+
+  code { font-family: Consolas, "Courier New", monospace; background: #EDEDED; padding: 1px 4px; border-radius: 3px; font-size: 9.5pt; }
+
+  pre code { background: none; padding: 0; }
+
+  .nota { background: #FFF6DD; border-left: 4px solid #E6A817; padding: 8px 12px; margin: 10px 0; }
+
+  .alerta { background: #FDECEA; border-left: 4px solid #C0392B; padding: 8px 12px; margin: 10px 0; }
+
+  .ok { background: #EAF6EC; border-left: 4px solid #2E8B57; padding: 8px 12px; margin: 10px 0; }
+
+  .cambio { background: #EAF2FB; border-left: 4px solid #2E74B5; padding: 8px 12px; margin: 10px 0; }
+
+  .salida { color: #6a737d; font-style: italic; }
+
+
+
+</style>
+
+</head>
+
+<body>
+
+
+
+<h1>Listado de Acciones en Bloques<br><span style="font-size:13pt;">PREPARACIÓN SERVIDOR DE PRODUCCIÓN sriapp44 (10.2.2.218) — TRAZABILIDAD FISCAL</span></h1>
+
+
+
+<table>
+
+  <tr><td style="width:20%;"><b>Objetivo:</b></td><td>Dejar el servidor de Producción listo en lo esencial: usuarios, carpetas y permisos, paquetes base, conectividad de red verificada, Python 3.13.5 instalado y validado con prueba funcional.</td></tr>
+
+  <tr><td><b>Ejecuta:</b></td><td>Administrador del servidor (sesión root o usuario con sudo). Los comandos incluyen <code>sudo</code> por consistencia; en sesión root se ejecutan igual.</td></tr>
+
+  <tr><td><b>Referencia:</b></td><td>Los bloques corresponden a los manuales del proyecto: Manual de Infraestructura (bloques 1–5) y Manual de Instalación Python 3.13.5 (bloques 6–9). Se adjuntan ambos.</td></tr>
+
+  <tr><td><b>NO incluye:</b></td><td>Instalación del Oracle Client 21c ni configuración del wallet (se coordinarán por separado según el Manual de Infraestructura sección VII y el Manual de Wallet). Solo se preparan carpetas y se recogen evidencias.</td></tr>
+
+  <tr><td><b>Importante:</b></td><td>Al finalizar cada bloque, copiar y enviar la salida de los comandos de verificación.</td></tr>
+
+</table>
+
+
+
+<h2>BLOQUE 0 — Evidencias iniciales del servidor</h2>
+
+<p>Solo recolección de información. Enviar las salidas completas:</p>
+
+<pre>cat /etc/redhat-release
+
+df -h
+
+free -h
+
+getent passwd python
+
+# (Interesa el campo del home: se espera que NO sea /home/python, eso se corrige en el Bloque 2)
+
+id python
+
+id oracle
+
+ls -ld /datos /opt/oracle</pre>
+
+
+
+<h2>BLOQUE 1 — Paquetes base (dnf)</h2>
+
+
+
+<h4>1.1 Sincronización de hora</h4>
+
+<pre>sudo chronyc -a makestep
+
+# Debe aparecer: 200 OK
+
+
+
+# Solo si aparece "506 Cannot talk to daemon":
+
+sudo dnf install -y chrony
+
+sudo systemctl enable --now chronyd
+
+sudo chronyc -a makestep
+
+chronyc tracking
+
+# Verificar: Leap status: Normal</pre>
+
+
+
+<h4>1.2 Herramientas de desarrollo y dependencias de compilación (RHEL 10)</h4>
+
+<pre>sudo dnf groupinstall "Development Tools" -y
+
+
+
+sudo dnf install -y openssl-devel bzip2-devel libffi-devel zlib-devel \
+
+    xz-devel readline-devel sqlite-devel tk-devel ncurses-devel \
+
+    libuuid-devel wget make gcc gcc-c++ libxcrypt-compat</pre>
+
+
+
+<h4>1.3 Paquetes requeridos por el instalador del aplicativo y el cliente Oracle</h4>
+
+<pre>sudo dnf install -y cifs-utils samba-client nmap-ncat \
+
+    libaio libaio-devel libnsl unzip zip net-tools
+
+
+
+# Java 21 (requerido por el proyecto, validado por el instalador):
+
+sudo dnf install -y java-21-openjdk java-21-openjdk-devel</pre>
+
+
+
+<h4>1.4 Verificación del bloque (enviar salidas)</h4>
+
+<pre>rpm -q cifs-utils samba-client nmap-ncat libaio libnsl
+
+java -version
+
+# Esperado: openjdk version "21.x.x"
+
+gcc --version | head -1</pre>
+
+
+
+<h2>BLOQUE 2 — Usuario python: corrección del home y estructura de carpetas</h2>
+
+
+
+<div class="alerta"><b>Hallazgo del diagnóstico:</b> el directorio /home/python NO existe en el servidor. El usuario fue creado sin home funcional. Este bloque lo corrige.</div>
+
+
+
+<h4>2.1 Crear y asignar el home del usuario python</h4>
+
+<pre>sudo mkdir -p /home/python
+
+sudo usermod -d /home/python -s /bin/bash python
+
+sudo cp /etc/skel/.bash_profile /etc/skel/.bashrc /home/python/ 2>/dev/null || true
+
+sudo chown -R python:python /home/python
+
+sudo chmod 755 /home/python</pre>
+
+
+
+<h4>2.2 (Opcional, estandarización con Desarrollo) Incluir a python en el grupo wheel</h4>
+
+<pre># El sudo ya funciona vía /etc/sudoers; esto solo alinea con el ambiente de Desarrollo:
+
+sudo usermod -aG wheel python</pre>
+
+
+
+<h4>2.3 Crear la estructura del proyecto</h4>
+
+<pre>sudo mkdir -p /home/python/sri_trazabilidad_fiscal/config
+
+sudo mkdir -p /home/python/sri_trazabilidad_fiscal/logs
+
+sudo mkdir -p /home/python/sri_trazabilidad_fiscal/tests
+
+sudo chown -R python:python /home/python/sri_trazabilidad_fiscal</pre>
+
+
+
+<h4>2.4 Estructura de trabajo en /datos (la usa el instalador del aplicativo)</h4>
+
+<pre>sudo mkdir -p /datos/remota /datos/trazab
+
+sudo chown python:python /datos /datos/remota /datos/trazab
+
+sudo chmod 755 /datos /datos/trazab
+
+sudo chmod 777 /datos/remota</pre>
+
+
+
+<h4>2.5 Verificación del bloque (enviar salidas)</h4>
+
+<pre>getent passwd python
+
+# Esperado: python:x:1000:1000::/home/python:/bin/bash
+
+
+
+id python
+
+ls -ld /home/python /home/python/sri_trazabilidad_fiscal /datos /datos/remota /datos/trazab
+
+sudo -u python touch /home/python/prueba_escritura && echo "ESCRITURA HOME OK"
+
+sudo -u python touch /datos/trazab/prueba_escritura && echo "ESCRITURA DATOS OK"
+
+sudo rm -f /home/python/prueba_escritura /datos/trazab/prueba_escritura</pre>
+
+
+
+<h2>BLOQUE 3 — Evidencias Oracle y preparación de carpeta de wallets (sin instalar nada)</h2>
+
+
+
+<pre># Evidencias (enviar salidas):
+
+ls -ld /opt/oracle
+
+# Esperado: drwxr-xr-x oracle oinstall (ya configurado el 11/06)
+
+
+
+ls -ld /opt/oracle/client_home 2>/dev/null || echo "client_home no existe (esperado: instalación pendiente, Manual Infraestructura secc. VII)"
+
+which sqlplus 2>/dev/null || echo "sqlplus no instalado (esperado en esta etapa)"
+
+
+
+# Preparar carpeta de wallets (la usará el Manual de Wallet):
+
+sudo mkdir -p /opt/oracle/wallets
+
+sudo chown python:oinstall /opt/oracle/wallets
+
+sudo chmod 750 /opt/oracle/wallets
+
+ls -ld /opt/oracle/wallets</pre>
+
+
+
+<h2>BLOQUE 4 — Pruebas de conectividad de red (enviar TODAS las salidas)</h2>
+
+
+
+<h4>4.1 Resolución de nombres de los nodos Oracle</h4>
+
+<pre>getent hosts sri23v sri22v || echo "Sin resolución DNS local (se usará IP en tnsnames)"</pre>
+
+
+
+<h4>4.2 Puerto 1521 hacia las bases de datos (origen sriapp44 10.2.2.218)</h4>
+
+<pre>nc -z -w5 10.2.3.64 1521 && echo "sri23v 1521 OK" || echo "sri23v 1521 FALLA (revisar firewall)"
+
+nc -z -w5 10.2.3.62 1521 && echo "sri22v 1521 OK" || echo "sri22v 1521 FALLA (revisar firewall)"</pre>
+
+
+
+<h4>4.3 Puerto 445 hacia los fileservers (montajes CIFS)</h4>
+
+<pre>nc -z -w5 10.2.0.103 445 && echo "fileserver 10.2.0.103 445 OK" || echo "10.2.0.103 445 FALLA (revisar firewall)"
+
+nc -z -w5 10.1.0.100 445 && echo "ftps 10.1.0.100 445 OK" || echo "10.1.0.100 445 FALLA (revisar firewall)"</pre>
+
+
+
+<h4>4.4 Puerto adicional (otro proyecto del área)</h4>
+
+<pre>nc -z -w5 192.168.72.64 5432 && echo "192.168.72.64 5432 OK" || echo "192.168.72.64 5432 FALLA"</pre>
+
+
+
+<div class="nota"><b>Alternativa sin nc</b> (método nativo de bash, mismo resultado):<br>
+
+<code>timeout 5 bash -c "echo &gt;/dev/tcp/10.2.3.64/1521" &amp;&amp; echo "PUERTO OK" || echo "FALLA"</code></div>
+
+
+
+<h2>BLOQUE 5 — Prueba de montaje de carpetas compartidas (CIFS)</h2>
+
+
+
+<div class="nota"><b>Nota:</b> Reemplazar <code>[USUARIO_CIFS]</code> y <code>[CLAVE_CIFS]</code> por las credenciales de dominio entregadas para el proyecto. El punto de montaje es <b>/datos/remota</b> (el que utiliza el aplicativo en Producción). Ejecutar solo si el Bloque 4.3 dio OK.</div>
+
+
+
+<h4>5.1 Montaje de prueba — FTPS (flujo INCREMENTAL)</h4>
+
+<pre>sudo mount -t cifs //10.1.0.100/ftps-frfiscal /datos/remota \
+
+  -o username=[USUARIO_CIFS],password=[CLAVE_CIFS],uid=python,gid=python
+
+
+
+ls /datos/remota && echo "MONTAJE FTPS OK"
+
+sudo umount /datos/remota && echo "Desmontado, limpio"</pre>
+
+
+
+<h4>5.2 Montaje de prueba — Fileserver (flujo INICIAL)</h4>
+
+<pre>sudo mount -t cifs "//10.2.0.103/fileserver/Direccion_General/DN_Control_Trib/Trazabilidad_Fiscal/InfoXML" /datos/remota \
+
+  -o username=[USUARIO_CIFS],password=[CLAVE_CIFS],uid=python,gid=python
+
+
+
+ls /datos/remota && echo "MONTAJE FILESERVER OK"
+
+sudo umount /datos/remota && echo "Desmontado, limpio"</pre>
+
+
+
+<h2>BLOQUE 6 — Limpieza de instalaciones previas de Python 3.13</h2>
+
+
+
+<p>En el servidor existe una instalación previa de Python 3.13 que no está completa/validada. Limpiar antes de instalar:</p>
+
+
+
+<pre>sudo pkill -f "python3.13" 2>/dev/null || true
+
+
+
+sudo rm -f /usr/local/bin/python3.13 /usr/local/bin/python3.13-config /usr/local/bin/pip3.13
+
+sudo rm -f /usr/local/bin/python3-app /usr/local/bin/pip3-app
+
+sudo rm -f /usr/local/bin/idle3.13 /usr/local/bin/2to3-3.13 /usr/local/bin/pydoc3.13
+
+
+
+sudo rm -rf /usr/local/python3.13 /usr/local/lib/python3.13
+
+sudo rm -f /usr/local/lib/libpython3.13*
+
+
+
+sudo rm -f /etc/ld.so.conf.d/python313.conf
+
+sudo ldconfig
+
+
+
+sudo rm -rf /usr/src/Python-3.13.5</pre>
+
+
+
+<h2>BLOQUE 7 — Instalación de Python 3.13.5 (compilado desde fuente)</h2>
+
+
+
+<h4>7.1 Obtener el código fuente</h4>
+
+<pre># OPCIÓN A — Si el servidor tiene salida a Internet:
+
+cd /usr/src
+
+sudo wget https://www.python.org/ftp/python/3.13.5/Python-3.13.5.tgz
+
+
+
+# OPCIÓN B — Sin Internet (Producción): copiar el archivo desde el servidor de Desarrollo:
+
+# (desde una máquina con acceso a ambos, o scp directo si hay ruta)
+
+# El archivo está en: 10.12.4.94:/home/python/Python-3.13.5.tgz
+
+# Dejarlo en /usr/src/Python-3.13.5.tgz</pre>
+
+
+
+<h4>7.2 Descomprimir y configurar (parámetros CRÍTICOS del proyecto)</h4>
+
+<pre>cd /usr/src
+
+sudo tar xzf Python-3.13.5.tgz
+
+cd Python-3.13.5
+
+
+
+sudo ./configure --prefix=/usr/local/python3.13 \
+
+    --enable-shared \
+
+    --enable-optimizations \
+
+    --with-computed-gotos \
+
+    --with-openssl=/usr \
+
+    --with-openssl-rpath=auto \
+
+    LDFLAGS="-Wl,-rpath /usr/local/python3.13/lib"</pre>
+
+
+
+<h4>7.3 Compilar e instalar (sin sobrescribir el Python del sistema)</h4>
+
+<pre>sudo make -j $(nproc)
+
+sudo make altinstall</pre>
+
+<p class="salida">La compilación con --enable-optimizations toma varios minutos (es normal).</p>
+
+
+
+<h4>7.4 Registrar librerías compartidas y compatibilidad libffi</h4>
+
+<pre>echo "/usr/local/python3.13/lib" | sudo tee /etc/ld.so.conf.d/python313.conf
+
+sudo ldconfig
+
+
+
+# Compatibilidad libffi para RHEL 10:
+
+if [[ ! -f /usr/lib64/libffi.so.6 ]]; then
+
+  libffi=$(find /usr/lib64 -name "libffi.so.*" | head -1)
+
+  if [[ -n "$libffi" ]]; then
+
+    sudo ln -sf "$libffi" /usr/lib64/libffi.so.6
+
+    sudo ldconfig
+
+  fi
+
+fi</pre>
+
+
+
+<h4>7.5 Crear los alias oficiales del proyecto</h4>
+
+<pre>sudo ln -sf /usr/local/python3.13/bin/python3.13 /usr/local/bin/python3-app
+
+sudo ln -sf /usr/local/python3.13/bin/pip3.13 /usr/local/bin/pip3-app
+
+sudo ln -sf /usr/local/python3.13/bin/python3.13 /usr/local/bin/python3.13
+
+sudo ln -sf /usr/local/python3.13/bin/pip3.13 /usr/local/bin/pip3.13
+
+hash -r</pre>
+
+
+
+<h2>BLOQUE 8 — Validaciones post-instalación de Python (enviar TODAS las salidas)</h2>
+
+
+
+<p>Estas son exactamente las validaciones que ejecutará el instalador del aplicativo; si alguna falla, el despliegue se detendrá:</p>
+
+
+
+<pre>/usr/local/python3.13/bin/python3.13 --version
+
+# Esperado: Python 3.13.5
+
+
+
+/usr/local/python3.13/bin/python3.13 -c "import ssl; print('SSL OK')"
+
+# Esperado: SSL OK
+
+
+
+/usr/local/python3.13/bin/python3.13 -c "import _ctypes; print('ctypes OK')"
+
+# Esperado: ctypes OK
+
+
+
+/usr/local/python3.13/bin/python3.13 -c "import sysconfig; print(sysconfig.get_config_var('Py_ENABLE_SHARED'))"
+
+# Esperado: 1
+
+
+
+python3-app --version
+
+# Esperado: Python 3.13.5
+
+
+
+which python3-app
+
+# Esperado: /usr/local/bin/python3-app</pre>
+
+
+
+<div class="alerta">⚠️ Si alguna de estas validaciones falla, NO continuar: revisar el Manual de Instalación de Python 3.13.5 (sección de solución de problemas) antes del Bloque 9.</div>
+
+
+
+<h2>BLOQUE 9 — Prueba funcional final (entorno virtual + pandas, como usuario python)</h2>
+
+
+
+<pre>sudo su - python
+
+cd /home/python/sri_trazabilidad_fiscal
+
+
+
+# Crear entorno virtual de prueba:
+
+/usr/local/python3.13/bin/python3.13 -m venv venv_prueba
+
+source venv_prueba/bin/activate
+
+
+
+pip install --upgrade pip
+
+pip install pandas
+
+
+
+python -c "import pandas as pd; import numpy as np; df = pd.DataFrame(np.random.randn(100000, 2)); df.info(); print(f'PROMEDIO: {df[0].mean():.4f} | PYTHON 3.13.5 LISTO EN PRODUCCION')"
+
+
+
+deactivate
+
+rm -rf venv_prueba
+
+exit</pre>
+
+
+
+<div class="nota"><b>Nota:</b> <code>pip install pandas</code> requiere salida a Internet o acceso al repositorio interno de paquetes. Si el servidor no tiene acceso, omitir la instalación de pandas y ejecutar la prueba solo hasta la creación del venv (<code>python --version</code> dentro del venv → Python 3.13.5); la instalación de dependencias la realizará el instalador del aplicativo desde requirements.txt durante el despliegue.</div>
+
+
+
+<h2>BLOQUE 10 — Checklist de cierre</h2>
+
+
+
+<table>
+
+  <tr><th>#</th><th>Ítem</th><th>Estado esperado al terminar</th></tr>
+
+  <tr><td>1</td><td>Paquetes base, Java 21, herramientas SMB (cifs-utils, samba-client, nc)</td><td>Instalados (Bloque 1)</td></tr>
+
+  <tr><td>2</td><td>Usuario python con home /home/python funcional y sudo</td><td>Corregido (Bloque 2)</td></tr>
+
+  <tr><td>3</td><td>Estructura /home/python/sri_trazabilidad_fiscal y /datos/{remota,trazab}</td><td>Creada con permisos (Bloque 2)</td></tr>
+
+  <tr><td>4</td><td>Usuario oracle + grupo oinstall + /opt/oracle</td><td>Ya configurado (11/06); carpeta wallets preparada (Bloque 3)</td></tr>
+
+  <tr><td>5</td><td>Conectividad 1521 (sri23v/sri22v) y 445 (fileservers)</td><td>Verificada con evidencias (Bloque 4); si algo FALLA → requerimiento a Seguridad Informática</td></tr>
+
+  <tr><td>6</td><td>Montajes CIFS de prueba</td><td>Verificados (Bloque 5)</td></tr>
+
+  <tr><td>7</td><td>Python 3.13.5 con --enable-shared, SSL, ctypes, alias</td><td>Instalado y validado (Bloques 6–8)</td></tr>
+
+  <tr><td>8</td><td>Prueba funcional venv + pandas</td><td>Ejecutada (Bloque 9)</td></tr>
+
+  <tr><td>9</td><td><b>Pendiente siguiente etapa:</b> Oracle Client 21c Home (Manual Infraestructura secc. VII) 
+
++ Wallet (Manual de Wallet)</td><td>Se coordina en el mismo paso, con el zip LINUX.X64_213000_client_home.zip</td></tr>
+
+  <tr><td>10</td><td><b>Pendiente etapa final:</b> Despliegue del binario certificado por QA</td><td>Manual de Despliegue, flujo Producción</td></tr>
+
+</table>
+
+
+
+</body>
+
+</html>

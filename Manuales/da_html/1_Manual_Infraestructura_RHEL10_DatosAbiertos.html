@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Manual de Infraestructura RHEL 10 — Datos Abiertos Facturación</title>
+<style>
+  @page { size: A4; margin: 2.5cm 2cm 2cm 2cm; }
+  body { font-family: "Calibri","Arial",sans-serif; font-size: 11pt; line-height: 1.4; color:#000; margin:0; padding:0; }
+  h1 { font-size:20pt; color:#1f4e79; border-bottom:3px solid #2e75b6; padding-bottom:6pt; margin-top:18pt; margin-bottom:6pt; text-transform:uppercase; letter-spacing:.5pt; page-break-after:avoid; }
+  h2 { font-size:14pt; color:#1f4e79; border-left:4pt solid #2e75b6; padding-left:10pt; margin-top:18pt; margin-bottom:10pt; page-break-after:avoid; }
+  h3 { font-size:12pt; color:#2e75b6; margin-top:14pt; margin-bottom:8pt; border-bottom:1pt dashed #bdd7ee; padding-bottom:3pt; page-break-after:avoid; }
+  h4 { font-size:11pt; color:#000; margin-top:10pt; margin-bottom:6pt; font-style:italic; page-break-after:avoid; }
+  p { margin-top:4pt; margin-bottom:4pt; text-align:justify; }
+  table { width:100%; border-collapse:collapse; margin:8pt 0 12pt 0; font-size:10pt; page-break-inside:avoid; }
+  th { background-color:#2e75b6; color:#fff; text-align:left; padding:6pt 8pt; border:1pt solid #1f4e79; font-weight:bold; }
+  td { padding:6pt 8pt; border:1pt solid #bfbfbf; vertical-align:top; }
+  tr:nth-child(even) { background-color:#f2f2f2; }
+  .code-block { background-color:#f2f2f2; border:1pt solid #d9d9d9; padding:8pt 10pt; margin:6pt 0 10pt 0; font-family:"Consolas","Courier New",monospace; font-size:9pt; line-height:1.5; white-space:pre; overflow-x:auto; page-break-inside:avoid; }
+  .code-block .comment { color:#008000; font-style:italic; }
+  .code-block .var { color:#c00000; font-weight:bold; }
+  .inline-code { background-color:#f2f2f2; padding:1pt 3pt; font-family:"Consolas","Courier New",monospace; font-size:10pt; color:#c00000; }
+  .info-box { background-color:#e7f3ff; border-left:3pt solid #2e75b6; padding:8pt 10pt; margin:8pt 0; page-break-inside:avoid; }
+  .alert-box { background-color:#fff2f2; border-left:3pt solid #c00000; padding:8pt 10pt; margin:8pt 0; page-break-inside:avoid; }
+  .ok-box { background-color:#eefaf0; border-left:3pt solid #2e9b57; padding:8pt 10pt; margin:8pt 0; page-break-inside:avoid; }
+  .ctx-box { background-color:#fff8e7; border:1pt solid #e0a800; border-left:4pt solid #e0a800; padding:6pt 10pt; margin:8pt 0; font-size:10pt; page-break-inside:avoid; }
+  .ctx-box strong { color:#8a6d00; }
+  .skip-box { background-color:#eaf4fb; border:1pt dashed #2e75b6; border-left:4pt solid #2e75b6; padding:6pt 10pt; margin:8pt 0; font-size:10pt; page-break-inside:avoid; }
+  .skip-box strong { color:#1f4e79; }
+  ul, ol { margin-top:4pt; margin-bottom:6pt; padding-left:20pt; }
+  li { margin-bottom:3pt; }
+  .footer { margin-top:24pt; padding-top:10pt; border-top:1pt solid #bdd7ee; font-size:9pt; color:#595959; text-align:center; }
+  .page-break { page-break-before:always; }
+</style>
+</head>
+<body>
+
+<h1>Manual de Infraestructura</h1>
+<p style="font-size:13pt; color:#1f4e79; margin-top:0;"><strong>Configuración de RHEL 10 para el Entorno Python — Datos Abiertos Facturación</strong></p>
+
+<table>
+  <tr><td><strong>Resumen</strong></td><td>Configuración inicial del servidor RHEL 10.1 para alojar el proyecto <span class="inline-code">sri_datos_abiertos_facturacion</span>. Incluye hardware, red, usuarios y grupos, paquetes base, Oracle Client 21c Home y la instalación de Apache Spark 4.0.2 con su servicio systemd.</td></tr>
+  <tr><td><strong>Alcance</strong></td><td>Prepara el sistema operativo y debe ejecutarse ANTES de los demás manuales. La instalación de Python 3.13.5 y la configuración del wallet se detallan en sus manuales específicos. Todo lo referente a Spark vive en este manual.</td></tr>
+  <tr><td><strong>Orden de ejecución</strong></td><td>Manual 1 de 5: 1) Infraestructura → 2) Python 3.13.5 → 3) Wallet Oracle → 4) Usuarios SSH → 5) Despliegue</td></tr>
+  <tr><td><strong>Usuarios de ejecución</strong></td><td><span class="inline-code">python</span> (con sudo, grupo wheel) para todo el manual; <span class="inline-code">oracle</span> únicamente para la descompresión del Oracle Client 21c (sección VII).</td></tr>
+  <tr><td><strong>Servidores</strong></td><td>Desarrollo 10.12.4.94 (sritrazadesa.sri.ad) · Preproducción 10.12.5.204 · Producción 10.2.2.218 (sriapp44)</td></tr>
+</table>
+
+<h3>Revisiones al Documento</h3>
+<table>
+  <tr><th>Fecha</th><th>Autor</th><th>Descripción</th></tr>
+  <tr><td>06-02-2026</td><td>Jimmy González</td><td>Actualización a RHEL 10.1</td></tr>
+  <tr><td>03-03-2026</td><td>Jimmy González</td><td>Separación de componentes en manuales específicos</td></tr>
+  <tr><td>Junio 2026</td><td>Jimmy A. González</td><td>Se consolida en este manual toda la instalación de Apache Spark 4.0.2 y la creación del servicio systemd (antes dispersa en otros manuales). Se incorpora el Oracle Client 21c Home idéntico a Trazabilidad. Reformateo al estándar de la serie. IP de producción 10.2.2.218 (sriapp44). Secciones de verificación "si ya está configurado, saltar". Sección de conexión de correo (SMTP). Instalación offline de wheels desde <span class="inline-code">/opt/librerias</span>.</td></tr>
+</table>
+
+<div class="ctx-box">
+<strong>📍 Producción sin internet.</strong> El servidor 10.2.2.218 no tiene salida a internet, pero <strong>sí</strong> resuelve <span class="inline-code">dnf install</span> contra los repos RHEL suscritos (Subscription Management). Lo que NO se puede es <span class="inline-code">pip install</span> desde PyPI: las librerías Python (wheels) se copian a <span class="inline-code">/opt/librerias</span> y se instalan offline.
+</div>
+
+<h2>0. Verificación Rápida — ¿Puede Saltarse Todo el Manual?</h2>
+<div class="ok-box">
+<strong>✅ Atajo.</strong> Si el servidor ya fue preparado antes, ejecute como usuario <span class="inline-code">python</span> el bloque siguiente. <strong>Si TODAS las líneas imprimen <span class="inline-code">[OK]</span></strong>, la infraestructura completa ya está lista: <strong>puede saltar directamente al Manual 2 (Python 3.13.5)</strong>. Si alguna imprime <span class="inline-code">[FALTA]</span>, vaya únicamente a la sección indicada entre corchetes y continúe desde ahí.
+</div>
+<div class="code-block"><span class="comment"># === VERIFICACIÓN RÁPIDA DE INFRAESTRUCTURA - Datos Abiertos ===</span>
+<span class="comment"># Ejecutar como usuario python. Cada línea reporta [OK] o [FALTA].</span>
+
+<span class="comment"># [Sec. III] Usuario python con sudo</span>
+id python &amp;&amp; sudo -l &gt;/dev/null 2>&amp;1 &amp;&amp; echo "[OK] python + sudo" || echo "[FALTA] -> Seccion III"
+
+<span class="comment"># [Sec. III] Usuario oracle (propietario de binarios)</span>
+id oracle &gt;/dev/null 2>&amp;1 &amp;&amp; echo "[OK] usuario oracle" || echo "[FALTA] -> Seccion 3.3"
+
+<span class="comment"># [Sec. V] Servicio de hora activo</span>
+systemctl is-active --quiet chronyd &amp;&amp; echo "[OK] chronyd activo" || echo "[FALTA] -> Seccion 5.1"
+
+<span class="comment"># [Sec. V] Paquetes base de compilacion</span>
+rpm -q gcc-c++ make openssl-devel libffi-devel &gt;/dev/null 2>&amp;1 &amp;&amp; echo "[OK] paquetes base" || echo "[FALTA] -> Seccion 5.3"
+
+<span class="comment"># [Sec. VI] Java 21 (se verifica por ruta absoluta: el PATH puede tener el JDK 1.8 del cliente Oracle)</span>
+/usr/lib/jvm/java-21-openjdk/bin/java -version 2>&amp;1 | grep -q '"21' &amp;&amp; echo "[OK] Java 21" || echo "[FALTA] -> Seccion VI"
+
+<span class="comment"># [Sec. VII] Oracle Client 21c + wallet (conecta sin clave)</span>
+sqlplus -s /@STAR_BI_DWH &lt;&lt;&lt; "exit" &gt;/dev/null 2>&amp;1 &amp;&amp; echo "[OK] Oracle Client + wallet STAR_BI_DWH" || echo "[FALTA] -> Seccion VII (wallet en Manual 3)"
+
+<span class="comment"># [Sec. VIII] Spark Connect activo y puerto 15002</span>
+systemctl is-active --quiet sri-datos-abiertos-spark &amp;&amp; timeout 2 bash -c "echo >/dev/tcp/localhost/15002" 2>/dev/null &amp;&amp; echo "[OK] Spark Connect 15002" || echo "[FALTA] -> Seccion VIII"
+
+<span class="comment"># [Sec. X] Librerias offline presentes</span>
+ls /opt/librerias/*.whl &gt;/dev/null 2>&amp;1 &amp;&amp; echo "[OK] /opt/librerias con wheels" || echo "[FALTA] -> Seccion X"</div>
+<div class="info-box">
+La conectividad SMTP (sección IX) y las llaves SSH del usuario <span class="inline-code">datos_abiertos</span> (Manual 4) no se incluyen en este bloque porque dependen de servicios externos; verifíquelas con la tabla de la sección XI si el atajo anterior pasó.
+</div>
+
+<h2 class="page-break">I. Prerrequisitos de Hardware y Software</h2>
+<h3>1.1 Especificaciones mínimas</h3>
+<table>
+  <tr><th>Recurso</th><th>Mínimo</th><th>Recomendado</th></tr>
+  <tr><td>RAM</td><td>16 GB</td><td>64 GB</td></tr>
+  <tr><td>CPUs</td><td>4 núcleos</td><td>8 núcleos</td></tr>
+  <tr><td>Disco sistema</td><td>100 GB</td><td>200 GB</td></tr>
+  <tr><td>Disco datos</td><td>200 GB</td><td>500 GB</td></tr>
+  <tr><td>Sistema operativo</td><td>RHEL 10.1 (Coughlan) o superior</td><td>RHEL 10.1 (Coughlan) o superior</td></tr>
+</table>
+
+<h3>1.2 Configuración de referencia — Servidor de Producción</h3>
+<table>
+  <tr><th>Componente</th><th>Descripción</th></tr>
+  <tr><td>Dirección IP del servidor python</td><td>10.2.2.218 (sriapp44)</td></tr>
+  <tr><td>Hardware</td><td>8 vCPU, 64 GB RAM</td></tr>
+  <tr><td>Sistema operativo</td><td>RHEL 10.1, instalación tipo Server (sin interfaz gráfica), grupos: Development Tools, System Tools</td></tr>
+  <tr><td>Particionamiento</td><td>Partición separada para <span class="inline-code">/home/python</span> con al menos 200 GB para datos del proyecto y temporales.</td></tr>
+  <tr><td>Red</td><td>Acceso a Oracle (STAR, SRIDW), a los servidores de descarga (SSH) y al servidor de correo (SMTP).</td></tr>
+  <tr><td>Usuario de aplicación</td><td>Usuario local <span class="inline-code">python</span> con lectura/escritura en <span class="inline-code">/home/python</span> y <span class="inline-code">/datos</span>.</td></tr>
+</table>
+
+<h2>II. Usuario de Ejecución del Manual</h2>
+<div class="ctx-box">
+<strong>📍 Este manual se ejecuta con el usuario local <span class="inline-code">python</span></strong> (grupo wheel para sudo). No se usa <span class="inline-code">root</span> directamente. Única excepción: la sección VII (descompresión del Oracle Client), que se hace con el usuario <span class="inline-code">oracle</span>.
+</div>
+<h4>Paso 1 — Conectarse vía SSH con su usuario institucional</h4>
+<div class="code-block">ssh <span class="var">&lt;su_usuario&gt;</span>@<span class="var">&lt;IP_DEL_AMBIENTE&gt;</span>
+<span class="comment"># Producción: 10.2.2.218 | Preproducción: 10.12.5.204 | Desarrollo: 10.12.4.94</span></div>
+<h4>Paso 2 — Cambiarse al usuario python</h4>
+<div class="code-block">sudo su - python
+whoami    <span class="comment"># Esperado: python</span></div>
+<div class="skip-box">
+<strong>⏭️ Si ya está conectado como <span class="inline-code">python</span></strong> (lo confirma <span class="inline-code">whoami</span>) y puede usar <span class="inline-code">sudo</span>, <strong>continúe con la sección III</strong>.
+</div>
+
+<h2>III. Usuarios y Grupos del Proyecto</h2>
+<h3>3.1 Usuario python (usuario de aplicación)</h3>
+<p>El proyecto se ejecuta con el usuario <span class="inline-code">python</span>, que debe pertenecer al grupo <span class="inline-code">wheel</span> para usar sudo. Si no cumple lo siguiente, pase al punto 3.2:</p>
+<div class="code-block">id python      <span class="comment"># groups debe incluir wheel</span>
+groups python  <span class="comment"># Esperado: python : python wheel</span>
+sudo -l        <span class="comment"># Debe poder ejecutar con sudo</span>
+
+<span class="comment"># Si no incluye wheel (con un usuario administrador):</span>
+sudo usermod -aG wheel python</div>
+<div class="skip-box">
+<strong>⏭️ Si ya existe</strong> el usuario <span class="inline-code">python</span> con grupo <span class="inline-code">wheel</span> y puede ejecutar <span class="inline-code">sudo -l</span> sin error, <strong>salte a la sección 3.3</strong>.
+</div>
+
+<h3>3.2 Creación del usuario python (solo si no existe)</h3>
+<p>Normalmente se crea durante la instalación del SO. Si no existe, créelo con el usuario administrador (con sudo):</p>
+<div class="code-block"><span class="comment"># 1. Crear usuario local python</span>
+sudo useradd -m -d /home/python -s /bin/bash python
+sudo passwd python
+<span class="comment"># 2. Incluirlo en wheel para sudo</span>
+sudo usermod -aG wheel python
+<span class="comment"># 3. Otorgar lectura/escritura sobre /datos</span>
+sudo mkdir -p /datos
+sudo chown python:python /datos
+sudo chmod 755 /datos
+<span class="comment"># 4. Verificar</span>
+id python
+sudo -l -U python</div>
+
+<h3>3.3 Creación del usuario oracle (propietario de los binarios)</h3>
+<p>El Oracle Client 21c se descomprime como propiedad del usuario <span class="inline-code">oracle</span> por estandarización. El usuario <span class="inline-code">oracle</span> no requiere sudo ni se usa para conectarse a la base: su única función es ser dueño de los binarios. El usuario <span class="inline-code">python</span> accede a ellos mediante permisos de lectura (ver sección 7.4).</p>
+<div class="code-block">sudo useradd -m -d /home/oracle -s /bin/bash oracle
+sudo passwd oracle
+id oracle
+<span class="comment"># Esperado: uid=XXXX(oracle) gid=XXXX(oracle) groups=XXXX(oracle)</span></div>
+<div class="skip-box">
+<strong>⏭️ Si ya existe</strong> el usuario <span class="inline-code">oracle</span> (verifíquelo con <span class="inline-code">id oracle</span>), <strong>salte a la sección IV</strong>.
+</div>
+<div class="info-box">
+<strong>Nota sobre oinstall.</strong> El estándar contempla un grupo <span class="inline-code">oinstall</span>. En la práctica no es necesario para que el ETL funcione: lo que <span class="inline-code">python</span> necesita es leer los binarios y librerías del cliente, lo cual se resuelve con permisos <span class="inline-code">o+rX</span> (sección 7.4). Si su política institucional exige <span class="inline-code">oinstall</span>, créelo y agregue ambos usuarios; de lo contrario, puede omitirlo.
+</div>
+
+<h2 class="page-break">IV. Conectividad de Red</h2>
+<p>El servidor debe tener acceso a las siguientes IPs y puertos. Las IP de los servicios STAR/SRIDW pueden variar según ambiente; verificar con el equipo de bases de datos.</p>
+<table>
+  <tr><th>Ambiente</th><th>Destino</th><th>IP / Hostname</th><th>Puerto</th><th>Protocolo</th><th>Observación</th></tr>
+  <tr><td>Todos</td><td>BD STAR</td><td>sri33 (Prod: sri23v / sri22v)</td><td>1521</td><td>TCP saliente</td><td>Conexión Oracle (tnsnames.ora)</td></tr>
+  <tr><td>Todos</td><td>BD SRIDW</td><td>dev 10.12.4.10:1523 · test 10.12.3.71 · prod sridw-scan.sri.ad</td><td>1521/1523</td><td>TCP saliente</td><td>Segunda base del proyecto</td></tr>
+  <tr><td>Producción</td><td>BD SRREP</td><td>10.1.3.48</td><td>1521</td><td>TCP saliente</td><td>Opcional</td></tr>
+  <tr><td>Todos</td><td>Servidores de descarga</td><td>10.1.15.11 (Quito) · 10.11.0.15 (Guayaquil)</td><td>22</td><td>TCP saliente</td><td>SSH, copia de archivos (usuario datos_abiertos)</td></tr>
+  <tr><td>Todos</td><td>Servidor de correo</td><td>(servidor SMTP institucional)</td><td>25 / 587</td><td>TCP saliente</td><td>Notificaciones del ETL</td></tr>
+  <tr><td>Todos</td><td>Acceso administración</td><td>—</td><td>22</td><td>TCP entrante</td><td>SSH</td></tr>
+  <tr><td>Desarrollo</td><td>Internet</td><td>—</td><td>443</td><td>TCP saliente</td><td>Descargas pip/wget (solo dev). En prod: offline.</td></tr>
+</table>
+
+<h2>V. Configuración del Sistema Base</h2>
+<h3>5.1 Sincronización de hora (chronyd)</h3>
+<div class="skip-box">
+<strong>⏭️ Verificación previa.</strong> Si <span class="inline-code">systemctl is-active chronyd</span> responde <span class="inline-code">active</span>, <strong>salte a la sección 5.2</strong>. La sincronización NTP plena (<span class="inline-code">Leap status: Normal</span>) es deseable pero NO obligatoria para el ETL: en servidores de producción aislados chronyd puede no alcanzar ninguna fuente NTP, y eso no impide el funcionamiento mientras la hora del sistema sea correcta.
+</div>
+<p>Con el usuario <span class="inline-code">python</span>. El servicio <span class="inline-code">chronyd</span> debe estar activo y, en lo posible, sincronizado para evitar errores de certificados y de acceso a los repos suscritos:</p>
+<div class="code-block">sudo systemctl enable --now chronyd
+sudo chronyc -a makestep
+chronyc tracking   <span class="comment"># Deseable: "Leap status: Normal"</span>
+
+<span class="comment"># Si aparece "506 Cannot talk to daemon":</span>
+sudo dnf install -y chrony
+sudo systemctl enable --now chronyd
+sudo chronyc -a makestep</div>
+<div class="info-box">
+En producción puede aparecer <span class="inline-code">The system clock is skewed... 5.0 seconds with the entitlement server</span>. Es la misma causa: sincronice con <span class="inline-code">chronyc -a makestep</span> para no afectar el acceso a los repos suscritos.
+</div>
+
+<h3>5.2 Actualización del sistema</h3>
+<div class="code-block">sudo dnf update -y</div>
+
+<h3>5.3 Instalación de paquetes esenciales</h3>
+<div class="skip-box">
+<strong>⏭️ Verificación previa.</strong> Si <span class="inline-code">rpm -q gcc-c++ make openssl-devel libffi-devel</span> los devuelve todos instalados (sin <span class="inline-code">not installed</span>), <strong>salte a la sección 5.4</strong>.
+</div>
+<p>Necesarios para el cliente Oracle, Spark y la compilación de Python. En producción (sin internet) este comando SÍ funciona contra los repos RHEL suscritos:</p>
+<div class="code-block">sudo dnf install -y libaio libaio-devel libnsl libstdc++-devel glibc-devel \
+    make wget curl net-tools unzip zip openssl-devel bzip2-devel \
+    libffi-devel readline-devel sqlite-devel tk-devel gcc-c++</div>
+
+<h3>5.4 Límites de sistema (opcional pero recomendado)</h3>
+<p>Editar <span class="inline-code">/etc/security/limits.conf</span> con <span class="inline-code">sudo vim</span> y agregar:</p>
+<div class="code-block">python soft nofile 65536
+python hard nofile 65536
+python soft nproc 16384
+python hard nproc 16384
+<span class="comment"># Verificar tras reiniciar sesión: ulimit -n</span></div>
+
+<h2 class="page-break">VI. Instalación de OpenJDK 21</h2>
+<div class="skip-box">
+<strong>⏭️ Verificación previa.</strong> Si <span class="inline-code">java -version</span> ya devuelve <span class="inline-code">openjdk version "21..."</span> y existe <span class="inline-code">/usr/lib/jvm/java-21-openjdk</span>, <strong>salte a la sección VII</strong>.
+</div>
+<div class="alert-box">
+<strong>⚠️ Dos Java distintos.</strong> Este OpenJDK 21 del sistema lo usan la aplicación/ETL y Spark. NO es el que usan <span class="inline-code">orapki</span> ni <span class="inline-code">mkstore</span>: esas herramientas usan el JDK interno del Oracle Client (<span class="inline-code">$ORACLE_HOME/jdk</span>, Java 1.8). Por eso varias verificaciones de Java 21 se hacen por <strong>ruta absoluta</strong>: el PATH puede tener primero el JDK 1.8 del cliente.
+</div>
+<div class="code-block">sudo dnf install -y java-21-openjdk java-21-openjdk-devel
+java -version
+<span class="comment"># Esperado: openjdk version "21.x.x"</span>
+ls -d /usr/lib/jvm/java-21-openjdk*
+<span class="comment"># Ruta esperada por el proyecto y por Spark: /usr/lib/jvm/java-21-openjdk</span></div>
+
+<h2>VII. Instalación del Oracle Client 21c Home</h2>
+<div class="skip-box">
+<strong>⏭️ Verificación previa.</strong> Si <span class="inline-code">sqlplus -v</span> devuelve <span class="inline-code">Release 21.x</span> y <span class="inline-code">sqlplus /@STAR_BI_DWH</span> conecta sin pedir contraseña, el cliente y el wallet ya están listos: <strong>salte al capítulo VIII (Spark)</strong>. Esta sección instala el cliente; el wallet y las credenciales se detallan en el Manual 3.
+</div>
+<div class="alert-box">
+<strong>⚠️ NO usar Instant Client 21c</strong> — no incluye orapki, mkstore ni tnsping. Use el <strong>Oracle Client Home 21c completo</strong>: <span class="inline-code">LINUX.X64_213000_client_home.zip</span> (más de 800 MB, binarios 21.3 / 21.15.0.0.0).
+</div>
+<div class="ctx-box">
+<strong>📍 Usuarios de esta sección:</strong> los pasos 7.1 y 7.4 se ejecutan con <span class="inline-code">python</span> + sudo. Los pasos 7.2 y 7.3 (descompresión y variables del cliente) con el usuario <span class="inline-code">oracle</span>. El cliente image-based no usa instalador gráfico: instalar = descomprimir.
+</div>
+
+<h3>7.1 Preparar directorios (usuario python, con sudo)</h3>
+<div class="code-block">sudo mkdir -p /opt/oracle
+sudo chown oracle:oracle /opt/oracle
+sudo chmod 755 /opt/oracle
+<span class="comment"># Copiar el instalador (de la carpeta compartida institucional o del portal Oracle)</span>
+sudo cp /ruta/de/origen/LINUX.X64_213000_client_home.zip /opt/oracle/
+sudo chown oracle:oracle /opt/oracle/LINUX.X64_213000_client_home.zip</div>
+
+<h3>7.2 Descomprimir el cliente (usuario oracle)</h3>
+<div class="code-block">sudo su - oracle
+cd /opt/oracle
+unzip -q LINUX.X64_213000_client_home.zip -d client_home
+<span class="comment"># Verificar que el Client Home trae las herramientas:</span>
+ls /opt/oracle/client_home/bin/sqlplus
+ls /opt/oracle/client_home/bin/orapki
+ls /opt/oracle/client_home/bin/mkstore
+ls /opt/oracle/client_home/bin/tnsping
+<span class="comment"># Los 4 deben existir</span></div>
+
+<h3>7.3 Variables de entorno del usuario oracle</h3>
+<p>Aún como <span class="inline-code">oracle</span>, editar <span class="inline-code">~/.bash_profile</span> y agregar:</p>
+<div class="code-block">export ORACLE_HOME=/opt/oracle/client_home
+export TNS_ADMIN=/opt/oracle/client_home/network/admin
+export LD_LIBRARY_PATH=/opt/oracle/client_home/lib:$LD_LIBRARY_PATH
+export PATH=/opt/oracle/client_home/bin:$PATH
+
+source ~/.bash_profile
+exit    <span class="comment"># regresa a la sesión del usuario python</span></div>
+
+<h3>7.4 Permisos de lectura para python y delegación de directorios (usuario python, con sudo)</h3>
+<p>Tras descomprimir, muchos archivos (incluidos los <span class="inline-code">.jar</span> de jlib) quedan con permisos 640/750, sin lectura para "otros". Como <span class="inline-code">python</span> no es <span class="inline-code">oracle</span>, <strong>no puede leer las librerías</strong> y orapki/mkstore fallan con <span class="inline-code">Could not find or load main class oracle.security.pki...</span>. Hay que dar lectura explícita:</p>
+<div class="code-block"><span class="comment"># Dar lectura/acceso a "otros" sobre librerías, Java y PKI del cliente</span>
+sudo chmod -R o+rX /opt/oracle/client_home/lib
+sudo chmod -R o+rX /opt/oracle/client_home/jlib
+sudo chmod -R o+rX /opt/oracle/client_home/jdk
+sudo chmod -R o+rX /opt/oracle/client_home/network/admin
+
+<span class="comment"># Verificar que python (como "otros") SÍ puede leer el .jar de PKI</span>
+cat /opt/oracle/client_home/jlib/oraclepki.jar > /dev/null && echo "OK: python lee jlib" || echo "ERROR: sin lectura"
+
+<span class="comment"># Delegar a python los directorios que el ETL gestiona en runtime:</span>
+sudo mkdir -p /opt/oracle/client_home/network/admin
+sudo chown -R python:python /opt/oracle/client_home/network/admin
+
+<span class="comment"># Directorio de wallets</span>
+sudo mkdir -p /opt/oracle/wallets
+sudo chown python:python /opt/oracle/wallets
+sudo chmod 755 /opt/oracle/wallets</div>
+<div class="ok-box">
+<strong>La R mayúscula en <span class="inline-code">o+rX</span></strong> da lectura a archivos y acceso (ejecución) a directorios, sin volver ejecutables los archivos que no lo eran. Es lo correcto para librerías.
+</div>
+
+<h3>7.5 Variables de entorno del usuario python</h3>
+<div class="code-block">cat << 'EOF' >> /home/python/.bashrc
+<span class="comment"># === Oracle Client 21c --- Datos Abiertos Facturación ===</span>
+export ORACLE_HOME=/opt/oracle/client_home
+export ORACLE_WALLET_PATH=/opt/oracle/wallets
+export TNS_ADMIN="${ORACLE_HOME}/network/admin"
+export LD_LIBRARY_PATH="${ORACLE_HOME}/lib:${LD_LIBRARY_PATH}"
+export PATH="${ORACLE_HOME}/bin:${PATH}"
+<span class="comment"># JAVA_HOME para orapki/mkstore: usa el JDK INTERNO del cliente (no el OpenJDK del sistema)</span>
+export JAVA_HOME="${ORACLE_HOME}/jdk"
+export PATH="${JAVA_HOME}/bin:${PATH}"
+<span class="comment"># ================================================</span>
+EOF
+
+source /home/python/.bashrc</div>
+<div class="alert-box">
+<strong>⚠️ Conflicto de JAVA_HOME con Spark.</strong> El bloque anterior deja <span class="inline-code">JAVA_HOME</span> apuntando al JDK 1.8 interno del cliente (lo que necesitan <span class="inline-code">orapki</span>/<span class="inline-code">mkstore</span>). Spark necesita Java 21. Por eso el servicio systemd de Spark (sección VIII) define su propio <span class="inline-code">JAVA_HOME=/usr/lib/jvm/java-21-openjdk</span> dentro de la unidad, de forma aislada. No dependa del <span class="inline-code">.bashrc</span> para Spark.
+</div>
+
+<h3>7.6 Verificación final (usuario python)</h3>
+<div class="code-block">sqlplus -v
+<span class="comment"># Esperado: SQL*Plus: Release 21.0.0.0.0 - Production / Version 21.x</span>
+which orapki && which mkstore && which tnsping
+ls -la ${ORACLE_HOME}/lib/libclntsh.so.21.1
+ls -la ${ORACLE_HOME}/lib/libnnz21.so
+
+<span class="comment"># Prueba decisiva: orapki debe arrancar (imprime versión, no error de clase)</span>
+orapki wallet create -wallet /opt/oracle/wallets -auto_login 2>&1 | head -3</div>
+<div class="ok-box">
+<strong>Si orapki imprime su versión y pide contraseña</strong>, la infraestructura del cliente está lista. El wallet y las credenciales (STAR_BI_DWH + SRIDW) se crean en el Manual 3.
+</div>
+
+<h3>7.7 Resumen de propietarios y permisos (referencia)</h3>
+<table>
+  <tr><th>Ruta</th><th>Propietario:Grupo</th><th>Permisos</th><th>Justificación</th></tr>
+  <tr><td>/opt/oracle</td><td>oracle:oracle</td><td>755</td><td>Raíz del software Oracle</td></tr>
+  <tr><td>/opt/oracle/client_home</td><td>oracle:oracle</td><td>755; lib/jlib/jdk con o+rX</td><td>Binarios; python los LEE vía permisos "otros"</td></tr>
+  <tr><td>/opt/oracle/client_home/network/admin</td><td>python:python</td><td>755</td><td>python edita tnsnames.ora y sqlnet.ora</td></tr>
+  <tr><td>/opt/oracle/wallets</td><td>python:python</td><td>755</td><td>El ETL (python) lee el wallet autologin en runtime</td></tr>
+  <tr><td>/opt/spark/spark402</td><td>python:python</td><td>755</td><td>Spark corre como servicio del usuario python</td></tr>
+  <tr><td>/opt/librerias</td><td>python:python</td><td>755</td><td>Wheels para instalación offline en producción</td></tr>
+  <tr><td>/home/python/sri_datos_abiertos_facturacion</td><td>python:python</td><td>755</td><td>Proyecto de la aplicación</td></tr>
+</table>
+
+<h2 class="page-break">VIII. Instalación de Apache Spark 4.0.2 y Servicio Spark Connect</h2>
+<div class="ctx-box">
+<strong>📍 Todo lo referente a Spark vive en este manual.</strong> El proyecto Datos Abiertos usa Spark Connect (servidor gRPC en el puerto 15002) para ejecutar consultas masivas a Oracle. Esta sección instala Spark en <span class="inline-code">/opt/spark</span> y crea el servicio systemd que lo mantiene corriendo.
+</div>
+<div class="skip-box">
+<strong>⏭️ Verificación previa</strong> — si Spark ya está corriendo, salte esta sección. Compruebe:
+</div>
+<div class="code-block">sudo systemctl is-active sri-datos-abiertos-spark   <span class="comment"># Esperado: active</span>
+timeout 2 bash -c "echo >/dev/tcp/localhost/15002" && echo "PUERTO 15002 OK"
+ls -ld /opt/spark/spark402   <span class="comment"># Debe existir, python:python</span></div>
+<p>Si el servicio está <span class="inline-code">active</span> y el puerto responde, Spark ya está configurado: continúe con la sección IX (correo).</p>
+
+<h3>8.1 Preparar directorio de Spark</h3>
+<div class="code-block">sudo mkdir -p /opt/spark
+sudo chown python:python /opt/spark
+sudo chmod 755 /opt/spark</div>
+
+<h3>8.2 Obtener el binario de Spark 4.0.2</h3>
+<div class="code-block"><span class="comment"># DESARROLLO (con internet):</span>
+cd /opt/spark
+wget https://archive.apache.org/dist/spark/spark-4.0.2/spark-4.0.2-bin-hadoop3.tgz</div>
+<div class="ctx-box">
+<strong>📍 PRODUCCIÓN (sin internet):</strong> copie previamente el archivo a <span class="inline-code">/home/python/offline/spark-4.0.2-bin-hadoop3.tgz</span> (vía SCP / repositorio interno) y continúe desde la descompresión.
+</div>
+
+<h3>8.3 Descomprimir y normalizar la ruta a spark402</h3>
+<div class="code-block">cd /opt/spark
+<span class="comment"># Desde internet (dev) o desde el archivo offline (prod):</span>
+tar xzf spark-4.0.2-bin-hadoop3.tgz    <span class="comment"># o: tar xzf /home/python/offline/spark-4.0.2-bin-hadoop3.tgz</span>
+mv spark-4.0.2-bin-hadoop3 spark402
+ls /opt/spark/spark402/bin/spark-submit   <span class="comment"># Debe existir</span>
+sudo chown -R python:python /opt/spark</div>
+
+<h3>8.4 Copiar el driver JDBC de Oracle a Spark</h3>
+<p>Spark necesita el driver <span class="inline-code">ojdbc11.jar</span> (y los JAR de PKI para leer el wallet) en su carpeta <span class="inline-code">jars/</span>:</p>
+<div class="code-block">cp $ORACLE_HOME/lib/ojdbc11.jar     /opt/spark/spark402/jars/
+cp $ORACLE_HOME/lib/oraclepki.jar   /opt/spark/spark402/jars/ 2>/dev/null
+cp $ORACLE_HOME/lib/osdt_core.jar   /opt/spark/spark402/jars/ 2>/dev/null
+cp $ORACLE_HOME/lib/osdt_cert.jar   /opt/spark/spark402/jars/ 2>/dev/null
+ls -la /opt/spark/spark402/jars/ojdbc11.jar   <span class="comment"># Confirmar</span></div>
+<div class="info-box">
+Si <span class="inline-code">ojdbc11.jar</span> no está en <span class="inline-code">$ORACLE_HOME/lib</span>, descárguelo de la web de Oracle (versión compatible con 21c) y colóquelo en <span class="inline-code">/opt/spark/spark402/jars/</span>. El servicio lo referencia con <span class="inline-code">--jars</span>.
+</div>
+
+<h3>8.5 Crear el servicio systemd sri-datos-abiertos-spark</h3>
+<p>Crear el archivo <span class="inline-code">/etc/systemd/system/sri-datos-abiertos-spark.service</span> (con <span class="inline-code">sudo vim</span>):</p>
+<div class="code-block">[Unit]
+Description=SRI Datos Abiertos Facturacion - Spark Connect Server
+After=network.target
+
+[Service]
+Type=simple
+User=python
+Group=python
+Environment="JAVA_HOME=/usr/lib/jvm/java-21-openjdk"
+Environment="SPARK_HOME=/opt/spark/spark402"
+Environment="ORACLE_HOME=/opt/oracle/client_home"
+Environment="TNS_ADMIN=/opt/oracle/wallets"
+Environment="LD_LIBRARY_PATH=/opt/oracle/client_home/lib"
+Environment="PYSPARK_PYTHON=/home/python/sri_datos_abiertos_facturacion/venv/bin/python"
+WorkingDirectory=/opt/spark/spark402
+ExecStart=/opt/spark/spark402/bin/spark-submit \
+  --packages org.apache.spark:spark-connect_2.13:4.0.2 \
+  --jars /opt/spark/spark402/jars/ojdbc11.jar \
+  --conf spark.connect.grpc.binding.port=15002 \
+  --conf spark.connect.grpc.binding.address=0.0.0.0 \
+  --conf spark.driver.memory=10g \
+  --conf spark.executor.memory=10g \
+  --conf spark.driver.extraJavaOptions="-Doracle.net.tns_admin=/opt/oracle/wallets -Doracle.net.wallet_location=/opt/oracle/wallets" \
+  --conf spark.executor.extraJavaOptions="-Doracle.net.tns_admin=/opt/oracle/wallets -Doracle.net.wallet_location=/opt/oracle/wallets" \
+  --class org.apache.spark.sql.connect.service.SparkConnectServer \
+  internal
+Restart=on-failure
+RestartSec=10
+TimeoutStartSec=120
+
+[Install]
+WantedBy=multi-user.target</div>
+<div class="alert-box">
+<strong>⚠️ Nombre único del servicio:</strong> <span class="inline-code">sri-datos-abiertos-spark.service</span>. El archivo de unidad, los comandos <span class="inline-code">systemctl</span> y los <span class="inline-code">journalctl</span> deben usar siempre este nombre. Si una instalación previa dejó otro nombre (p.ej. <span class="inline-code">sri-spark-connect</span>), deshabilítelo antes para no tener dos servidores compitiendo por el puerto 15002.
+</div>
+
+<h3>8.6 Habilitar y arrancar el servicio</h3>
+<div class="code-block">sudo systemctl daemon-reload
+sudo systemctl enable sri-datos-abiertos-spark.service
+sudo systemctl start sri-datos-abiertos-spark.service
+<span class="comment"># El primer arranque descarga el paquete spark-connect_2.13 (en dev). En prod sin internet,</span>
+<span class="comment"># ese paquete debe estar precargado en el repositorio local de ivy/maven del usuario python.</span>
+sleep 20
+sudo systemctl status sri-datos-abiertos-spark.service --no-pager
+<span class="comment"># Esperado: active (running)</span></div>
+
+<h3>8.7 Verificar que Spark Connect responde</h3>
+<div class="code-block">timeout 2 bash -c "echo >/dev/tcp/localhost/15002" && echo "PUERTO 15002 OK"
+<span class="comment"># Ver logs en vivo si algo falla:</span>
+sudo journalctl -u sri-datos-abiertos-spark.service -f</div>
+<div class="ctx-box">
+<strong>📍 Producción sin internet y <span class="inline-code">--packages</span>.</strong> El parámetro <span class="inline-code">--packages org.apache.spark:spark-connect_2.13:4.0.2</span> intenta resolver desde internet en el primer arranque. En producción, ese JAR debe estar precargado en <span class="inline-code">/home/python/.ivy2</span> o reemplazado por la ruta local del JAR en <span class="inline-code">--jars</span>. Coordine con QA/Desarrollo para incluir el paquete de Spark Connect en el material offline.
+</div>
+
+<h2 class="page-break">IX. Conexión de Correo (SMTP)</h2>
+<div class="ctx-box">
+<strong>📍 El ETL envía una notificación por correo</strong> al finalizar cada corrida (estado del proceso). Esta sección valida la conectividad mínima al servidor SMTP. La configuración fina (remitente, destinatarios) vive en <span class="inline-code">configlnx.toml</span>.
+</div>
+<div class="skip-box">
+<strong>⏭️ Si el correo ya funciona</strong> (el ETL envía notificaciones sin error), <strong>salte esta sección</strong>.
+</div>
+
+<h3>9.1 Verificar conectividad al puerto SMTP</h3>
+<div class="code-block"><span class="comment"># Prueba mínima: que el servidor alcance el puerto 25 (o 587) del SMTP institucional</span>
+timeout 3 bash -c "echo >/dev/tcp/<span class="var">&lt;HOST_SMTP&gt;</span>/25" && echo "SMTP 25 OK" || echo "SMTP 25 NO alcanzable"
+
+<span class="comment"># Alternativa con net-tools/telnet si está disponible:</span>
+curl -v telnet://<span class="var">&lt;HOST_SMTP&gt;</span>:25 2>&1 | head -5</div>
+
+<h3>9.2 Prueba de envío básico con Python</h3>
+<p>Prueba mínima que el ETL replica internamente (sin autenticación, puerto 25; ajustar si su SMTP exige TLS/587):</p>
+<div class="code-block">python3.13 - << 'PYEOF'
+import smtplib
+from email.mime.text import MIMEText
+host = <span class="var">"SMTP_HOST"</span>; port = 25
+msg = MIMEText("Prueba de correo Datos Abiertos - infraestructura OK")
+msg["Subject"] = "[Datos Abiertos] Prueba SMTP"
+msg["From"] = <span class="var">"datos_abiertos@sri.gob.ec"</span>
+msg["To"]   = <span class="var">"destinatario@sri.gob.ec"</span>
+with smtplib.SMTP(host, port, timeout=10) as s:
+    s.sendmail(msg["From"], [msg["To"]], msg.as_string())
+print("Correo enviado OK")
+PYEOF</div>
+<div class="info-box">
+Si el SMTP institucional exige TLS y autenticación, use el puerto 587 con <span class="inline-code">s.starttls()</span> y <span class="inline-code">s.login(user, pass)</span>. Lo mínimo que debe funcionar es la conectividad del paso 9.1.
+</div>
+
+<h2 class="page-break">X. Instalación Offline de Librerías Python (/opt/librerias)</h2>
+<div class="ctx-box">
+<strong>📍 Producción sin internet.</strong> Todas las dependencias Python (wheels) se copian a <span class="inline-code">/opt/librerias</span> y se instalan sin acceso a PyPI. El directorio debe existir y ser propiedad de <span class="inline-code">python:python</span> para instalar sin sudo.
+</div>
+
+<h3>10.1 Crear el directorio con permisos correctos</h3>
+<div class="code-block"><span class="comment"># Crear si no existe; debe ser de python para instalar sin sudo</span>
+sudo mkdir -p /opt/librerias
+sudo chown python:python /opt/librerias
+sudo chmod 755 /opt/librerias
+ls -ld /opt/librerias    <span class="comment"># Esperado: drwxr-xr-x python python</span></div>
+
+<h3>10.2 Colocar los wheels y validar instalación offline</h3>
+<div class="code-block"><span class="comment"># Copiar los .whl traídos desde una máquina con internet a /opt/librerias</span>
+ls -la /opt/librerias/    <span class="comment"># pandas, numpy, oracledb, pyspark, pyinstaller, toml, pydantic ...</span>
+
+<span class="comment"># Instalación offline dentro del venv del proyecto (sin internet):</span>
+source /home/python/sri_datos_abiertos_facturacion/venv/bin/activate
+pip install --no-index --find-links=/opt/librerias -r \
+    /home/python/sri_datos_abiertos_facturacion/requirements.txt
+deactivate</div>
+<div class="info-box">
+El instalador <span class="inline-code">datos_abiertos.bash</span> (Manual 5) usa esta misma carpeta cuando detecta ausencia de internet. Mantener <span class="inline-code">/opt/librerias</span> actualizado con los wheels que liste <span class="inline-code">requirements.txt</span>.
+</div>
+
+<h2 class="page-break">XI. Verificación: Qué Está Listo y Qué Saltar</h2>
+<p>Tabla rápida para decidir, antes de ejecutar el instalador, qué componentes ya están configurados (y por tanto se saltan) y cuáles faltan.</p>
+<table>
+  <tr><th>Componente</th><th>Comando de verificación</th><th>Si responde OK</th></tr>
+  <tr><td>Usuario python + sudo</td><td><span class="inline-code">id python &amp;&amp; sudo -l</span></td><td>Saltar 3.1–3.2</td></tr>
+  <tr><td>Java 21</td><td><span class="inline-code">java -version</span></td><td>Saltar VI</td></tr>
+  <tr><td>Oracle Client + Wallet</td><td><span class="inline-code">sqlplus /@STAR_BI_DWH</span> (conecta sin clave)</td><td>Saltar VII (y revisar Manual 3 solo si falta SRIDW)</td></tr>
+  <tr><td>Spark Connect</td><td><span class="inline-code">systemctl is-active sri-datos-abiertos-spark</span></td><td>Saltar VIII</td></tr>
+  <tr><td>Correo</td><td>El ETL envía notificación sin error</td><td>Saltar IX</td></tr>
+  <tr><td>Conexión a servidores de descarga</td><td><span class="inline-code">ssh -i ~/.ssh/sri_datos_abiertos_key datos_abiertos@10.1.15.11 "echo OK"</span></td><td>Ver Manual 4 (ya configurado)</td></tr>
+  <tr><td>Librerías offline</td><td><span class="inline-code">ls /opt/librerias</span> con wheels presentes</td><td>Saltar X</td></tr>
+</table>
+
+<h2 class="page-break">XII. Solución de Problemas Comunes de Infraestructura</h2>
+<table>
+  <tr><th>Problema</th><th>Posible causa</th><th>Solución</th></tr>
+  <tr><td>orapki/mkstore: Could not find or load main class oracle.security.pki...</td><td>python no puede LEER los .jar (quedaron de oracle, 640/750)</td><td>Aplicar <span class="inline-code">chmod -R o+rX</span> en lib/jlib/jdk (7.4). Verificar con <span class="inline-code">cat .../oraclepki.jar &gt; /dev/null</span>.</td></tr>
+  <tr><td>Servicio Spark no arranca / queda en activating</td><td>JAVA_HOME del .bashrc apunta al JDK 1.8 del cliente</td><td>El servicio define su propio <span class="inline-code">JAVA_HOME=/usr/lib/jvm/java-21-openjdk</span>. Verificar la línea Environment en la unidad.</td></tr>
+  <tr><td>Spark no carga ojdbc11.jar</td><td>JAR ausente en /opt/spark/spark402/jars</td><td>Copiar desde <span class="inline-code">$ORACLE_HOME/lib</span> (8.4) y reiniciar el servicio.</td></tr>
+  <tr><td>Primer arranque de Spark falla en producción</td><td><span class="inline-code">--packages</span> intenta bajar de internet</td><td>Precargar el paquete spark-connect en <span class="inline-code">.ivy2</span> o referenciar el JAR local (8.7).</td></tr>
+  <tr><td>tnsping: command not found</td><td>Cliente Oracle no instalado o PATH</td><td>Ejecutar sección VII y verificar <span class="inline-code">$ORACLE_HOME/bin</span> en PATH.</td></tr>
+  <tr><td>libclntsh.so: cannot open shared object</td><td>LD_LIBRARY_PATH no apunta a $ORACLE_HOME/lib</td><td>Exportar <span class="inline-code">LD_LIBRARY_PATH</span> en .bashrc de python (7.5).</td></tr>
+  <tr><td>Permission denied al escribir en /opt/librerias</td><td>Directorio propiedad de root</td><td><span class="inline-code">sudo chown python:python /opt/librerias</span> (sección X).</td></tr>
+  <tr><td>chronyc: Cannot talk to daemon</td><td>chronyd no iniciado</td><td><span class="inline-code">sudo systemctl enable --now chronyd</span></td></tr>
+</table>
+
+<h2 class="page-break">XIII. Componentes y Manuales Siguientes</h2>
+<table>
+  <tr><th>Orden</th><th>Componente</th><th>Manual de referencia</th></tr>
+  <tr><td>2</td><td>Python 3.13.5 (compilado <span class="inline-code">--enable-shared</span>)</td><td>Manual_Instalacion_Python3135_DatosAbiertos</td></tr>
+  <tr><td>3</td><td>Wallet Oracle (STAR_BI_DWH + SRIDW)</td><td>Manual_Configuracion_Wallet_DatosAbiertos</td></tr>
+  <tr><td>4</td><td>Usuario datos_abiertos y llaves SSH</td><td>Manual_Configuracion_Usuarios_DatosAbiertos</td></tr>
+  <tr><td>5</td><td>Aplicación ETL (consume Spark de este manual)</td><td>Manual_Despliegue_DatosAbiertos</td></tr>
+</table>
+
+<div class="footer">
+SRI — Ingeniería de Datos · Datos Abiertos Facturación · Manual de Infraestructura RHEL 10 · Junio 2026
+</div>
+
+</body>
+</html>

@@ -1,0 +1,37 @@
+CI DWH SGI Datos Abiertos
+
+FACTURACION	
+
+
+control de cambios 
+C13281			CRQ000000000524				2026-02-06
+
+
+
+
+
+
+
+
+VEHICULAR
+
+
+
+C13436 		CRQ000000000532			30/05/2026
+
+
+
+
+
+
+git fetch origin
+git checkout main
+
+git pull
+git add .
+git commit -m "igualando ambiente"
+
+git push origin main
+ 
+ 
+ 

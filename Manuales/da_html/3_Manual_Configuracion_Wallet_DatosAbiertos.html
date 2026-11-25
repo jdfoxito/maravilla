@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Manual de Configuración de Wallets Oracle — Datos Abiertos Facturación</title>
+<style>
+  @page { size: A4; margin: 2.5cm 2cm 2cm 2cm; }
+  body { font-family: "Calibri","Arial",sans-serif; font-size: 11pt; line-height: 1.4; color:#000; margin:0; padding:0; }
+  h1 { font-size:20pt; color:#1f4e79; border-bottom:3px solid #2e75b6; padding-bottom:6pt; margin-top:18pt; margin-bottom:6pt; text-transform:uppercase; letter-spacing:.5pt; page-break-after:avoid; }
+  h2 { font-size:14pt; color:#1f4e79; border-left:4pt solid #2e75b6; padding-left:10pt; margin-top:18pt; margin-bottom:10pt; page-break-after:avoid; }
+  h3 { font-size:12pt; color:#2e75b6; margin-top:14pt; margin-bottom:8pt; border-bottom:1pt dashed #bdd7ee; padding-bottom:3pt; page-break-after:avoid; }
+  h4 { font-size:11pt; color:#000; margin-top:10pt; margin-bottom:6pt; font-style:italic; page-break-after:avoid; }
+  p { margin-top:4pt; margin-bottom:4pt; text-align:justify; }
+  table { width:100%; border-collapse:collapse; margin:8pt 0 12pt 0; font-size:10pt; page-break-inside:avoid; }
+  th { background-color:#2e75b6; color:#fff; text-align:left; padding:6pt 8pt; border:1pt solid #1f4e79; font-weight:bold; }
+  td { padding:6pt 8pt; border:1pt solid #bfbfbf; vertical-align:top; }
+  tr:nth-child(even) { background-color:#f2f2f2; }
+  .code-block { background-color:#f2f2f2; border:1pt solid #d9d9d9; padding:8pt 10pt; margin:6pt 0 10pt 0; font-family:"Consolas","Courier New",monospace; font-size:9pt; line-height:1.5; white-space:pre; overflow-x:auto; page-break-inside:avoid; }
+  .code-block .comment { color:#008000; font-style:italic; }
+  .code-block .var { color:#c00000; font-weight:bold; }
+  .inline-code { background-color:#f2f2f2; padding:1pt 3pt; font-family:"Consolas","Courier New",monospace; font-size:10pt; color:#c00000; }
+  .info-box { background-color:#e7f3ff; border-left:3pt solid #2e75b6; padding:8pt 10pt; margin:8pt 0; page-break-inside:avoid; }
+  .alert-box { background-color:#fff2f2; border-left:3pt solid #c00000; padding:8pt 10pt; margin:8pt 0; page-break-inside:avoid; }
+  .ok-box { background-color:#eefaf0; border-left:3pt solid #2e9b57; padding:8pt 10pt; margin:8pt 0; page-break-inside:avoid; }
+  .ctx-box { background-color:#fff8e7; border:1pt solid #e0a800; border-left:4pt solid #e0a800; padding:6pt 10pt; margin:8pt 0; font-size:10pt; page-break-inside:avoid; }
+  .ctx-box strong { color:#8a6d00; }
+  .skip-box { background-color:#eaf4fb; border:1pt dashed #2e75b6; border-left:4pt solid #2e75b6; padding:6pt 10pt; margin:8pt 0; font-size:10pt; page-break-inside:avoid; }
+  .skip-box strong { color:#1f4e79; }
+  ul, ol { margin-top:4pt; margin-bottom:6pt; padding-left:20pt; }
+  li { margin-bottom:3pt; }
+  .footer { margin-top:24pt; padding-top:10pt; border-top:1pt solid #bdd7ee; font-size:9pt; color:#595959; text-align:center; }
+  .page-break { page-break-before:always; }
+</style>
+</head>
+<body>
+
+<h1>Configuración de Wallets Oracle</h1>
+<p style="font-size:13pt; color:#1f4e79; margin-top:0;"><strong>Datos Abiertos Facturación — RHEL 10.x · Oracle Client 21c · Dos credenciales: STAR_BI_DWH + SRIDW</strong></p>
+
+<table>
+  <tr><td><strong>Resumen</strong></td><td>Crear y configurar el wallet Oracle con autologin para conexión segura sin exponer contraseñas. Este proyecto usa dos bases: <span class="inline-code">STAR_BI_DWH</span> (idéntica a Trazabilidad) y la nueva <span class="inline-code">SRIDW</span>.</td></tr>
+  <tr><td><strong>Alcance</strong></td><td>Instalación del cliente (resumen autocontenido), TNS para ambas bases, creación de las dos credenciales en un mismo wallet y validación con SQL*Plus y Python.</td></tr>
+  <tr><td><strong>Orden de ejecución</strong></td><td>Manual 3 de 5: 1) Infraestructura → 2) Python 3.13.5 → 3) Wallet Oracle → 4) Usuarios SSH → 5) Despliegue</td></tr>
+  <tr><td><strong>Usuario de ejecución</strong></td><td>Local <span class="inline-code">python</span>. No se usa root ni oracle para ejecutar.</td></tr>
+  <tr><td><strong>Variables</strong></td><td><span class="inline-code">ORACLE_HOME=/opt/oracle/client_home</span> · <span class="inline-code">ORACLE_WALLET_PATH=/opt/oracle/wallets</span></td></tr>
+  <tr><td><strong>Servidor</strong></td><td>Producción 10.2.2.218 (sriapp44)</td></tr>
+</table>
+
+<h3>Revisiones al Documento</h3>
+<table>
+  <tr><th>Fecha</th><th>Autor</th><th>Descripción</th></tr>
+  <tr><td>08/07/2024</td><td>Marcelo Lobato</td><td>Emisión inicial</td></tr>
+  <tr><td>06/02/2026</td><td>Jimmy González</td><td>Actualización parcial</td></tr>
+  <tr><td>Junio 2026</td><td>Jimmy A. González</td><td>Clonado del Manual de Wallet de Trazabilidad Fiscal (escenarios A–E, validados en ambiente real). Se añade una segunda credencial SRIDW en el mismo wallet, con sus tres bloques tnsnames (dev/test/prod). Bloque de verificación rápida inicial. Oracle Client 21c. IP producción 10.2.2.218.</td></tr>
+</table>
+
+<h2>0. Verificación Rápida — ¿Puede Saltarse Todo el Manual?</h2>
+<div class="ok-box">
+<strong>✅ Atajo.</strong> Si el wallet ya fue configurado antes, ejecute como usuario <span class="inline-code">python</span> el bloque siguiente. <strong>Si TODAS las líneas imprimen <span class="inline-code">[OK]</span></strong>, el wallet ya tiene las dos credenciales: <strong>puede saltar directamente al Manual 4 (Usuarios SSH)</strong>. Si solo conecta STAR_BI_DWH, vaya directo a la <strong>sección IV-bis</strong> (agregar SRIDW). Si nada conecta, recorra el manual desde la sección que indique cada <span class="inline-code">[FALTA]</span>.
+</div>
+<div class="code-block"><span class="comment"># VERIFICACIÓN RÁPIDA DEL WALLET - Datos Abiertos</span>
+<span class="comment"># Ejecutar como usuario python. Cada línea reporta [OK] o [FALTA].</span>
+
+<span class="comment"># [Sec. 0.2] Variables de entorno Oracle</span>
+[ -n "$ORACLE_HOME" ] && [ -n "$TNS_ADMIN" ] && echo "[OK] variables Oracle" || echo "[FALTA] -> Seccion 0.2"
+
+<span class="comment"># [Sec. II] Cliente Oracle 21c</span>
+sqlplus -v 2>/dev/null | grep -q "Release 21" && echo "[OK] Oracle Client 21c" || echo "[FALTA] -> Seccion II"
+
+<span class="comment"># [Sec. IV] El wallet lista ambas credenciales</span>
+LC=$(mkstore -wrl /opt/oracle/wallets -listCredential 2>/dev/null)
+echo "$LC" | grep -q "STAR_BI_DWH" && echo "[OK] credencial STAR_BI_DWH" || echo "[FALTA] -> Seccion IV (Escenario A)"
+echo "$LC" | grep -q "SRIDW" && echo "[OK] credencial SRIDW" || echo "[FALTA] -> Seccion IV-bis (agregar SRIDW)"
+
+<span class="comment"># [Sec. V] Conexión real sin contraseña a las DOS bases (validación decisiva)</span>
+sqlplus -s /@STAR_BI_DWH &lt;&lt;&lt; "exit" &gt;/dev/null 2>&amp;1 &amp;&amp; echo "[OK] conecta STAR_BI_DWH" || echo "[FALTA] -> Seccion V / III (tnsnames STAR)"
+sqlplus -s /@SRIDW       &lt;&lt;&lt; "exit" &gt;/dev/null 2>&amp;1 &amp;&amp; echo "[OK] conecta SRIDW"       || echo "[FALTA] -> Seccion IV-bis / 3.2 (tnsnames SRIDW)"</div>
+<div class="info-box">
+La validación decisiva es la conexión real con <span class="inline-code">sqlplus /@ALIAS</span> (sección V): si ambas conectan sin pedir contraseña, el autologin funciona para las dos bases del proyecto.
+</div>
+
+<h3>0.1 Usuario de Ejecución y Prerrequisitos</h3>
+<div class="ctx-box">
+<strong>📍 Todo este manual lo ejecuta el usuario <span class="inline-code">python</span>.</strong> No se usa root ni oracle para ejecutar. Conexión: SSH con usuario institucional → <span class="inline-code">sudo su - python</span> → verificar con <span class="inline-code">whoami</span>.
+</div>
+<h4>0.1.1 Verificar usuario y permisos</h4>
+<div class="code-block">whoami            <span class="comment"># Esperado: python</span>
+id python         <span class="comment"># Debe incluir el grupo wheel (para sudo)</span>
+sudo -l           <span class="comment"># El usuario debe poder ejecutar con sudo</span>
+id oracle         <span class="comment"># Debe existir; se crea en el Manual 1 (solo dueño de binarios)</span></div>
+
+<h3>0.2 Variables de entorno</h3>
+<div class="skip-box">
+<strong>⏭️ Verificación previa.</strong> Si <span class="inline-code">echo $ORACLE_HOME</span> y <span class="inline-code">echo $TNS_ADMIN</span> ya devuelven sus rutas y <span class="inline-code">echo $JAVA_HOME</span> apunta a <span class="inline-code">${ORACLE_HOME}/jdk</span>, <strong>salte a la sección I</strong> (o directo a la II si el cliente está sano).
+</div>
+<div class="code-block"><span class="comment"># 1) ¿Están definidas?</span>
+echo $ORACLE_HOME          <span class="comment"># /opt/oracle/client_home</span>
+echo $TNS_ADMIN            <span class="comment"># /opt/oracle/client_home/network/admin</span>
+echo $LD_LIBRARY_PATH | grep oracle
+
+<span class="comment"># 2) Si NO están, agregarlas al .bashrc del usuario python:</span>
+cat << 'EOF' >> /home/python/.bashrc
+<span class="comment"># === Oracle Client 21c --- Datos Abiertos Facturación ===</span>
+export ORACLE_HOME=/opt/oracle/client_home
+export ORACLE_WALLET_PATH=/opt/oracle/wallets
+export TNS_ADMIN="${ORACLE_HOME}/network/admin"
+export LD_LIBRARY_PATH="${ORACLE_HOME}/lib:${LD_LIBRARY_PATH}"
+export PATH="${ORACLE_HOME}/bin:${PATH}"
+<span class="comment"># JAVA_HOME: requerido por orapki y mkstore (son scripts Java)</span>
+export JAVA_HOME="${ORACLE_HOME}/jdk"
+export PATH="${JAVA_HOME}/bin:${PATH}"
+<span class="comment"># ================================================</span>
+EOF
+
+source /home/python/.bashrc</div>
+<div class="alert-box">
+<strong>⚠️ El JAVA_HOME es obligatorio para el wallet.</strong> Las herramientas <span class="inline-code">orapki</span> y <span class="inline-code">mkstore</span> son scripts Java. Sin JAVA_HOME apuntando al JDK del cliente (<span class="inline-code">${ORACLE_HOME}/jdk</span>), fallan con <span class="inline-code">Could not find or load main class oracle.security.pki...</span> (ver Solución de Problemas).
+</div>
+
+<h2 class="page-break">I. Cuándo Borrar el Cliente Oracle y Empezar de Nuevo</h2>
+<div class="skip-box">
+<strong>⏭️ Solo si aplica.</strong> Esta sección y la II son para reinstalar el cliente. Si <span class="inline-code">sqlplus -v</span> ya devuelve <span class="inline-code">Release 21.x</span> y el cliente está sano, <strong>salte a la sección III (TNS)</strong>.
+</div>
+<p>Si la configuración del Oracle Client no funciona (no conecta por wallet, errores persistentes de librerías, instalación a medias o de origen dudoso), se borra el cliente y se instala desde cero.</p>
+
+<h3>1.1 Respaldar lo que funciona, de pronto sea necesario</h3>
+<div class="code-block">BK=/home/python/oracle_backup_$(date +%Y%m%d_%H%M%S)
+mkdir -p "$BK"
+cp /opt/oracle/client_home/network/admin/sqlnet.ora   "$BK"/ 2>/dev/null
+cp /opt/oracle/client_home/network/admin/tnsnames.ora "$BK"/ 2>/dev/null
+cp -rp /opt/oracle/wallets "$BK"/wallets_copia
+grep -r -i oracle_home /etc/profile.d/ /etc/profile 2>/dev/null > "$BK"/origen_variables.txt
+echo "Respaldo en: $BK"; ls -la "$BK"</div>
+
+<h3>1.2 Eliminar el cliente previo (los wallets quedan intactos)</h3>
+<div class="code-block">ls -al /opt/oracle/
+sudo rm -rf /opt/oracle/client_home
+ls -la /opt/oracle/wallets/   <span class="comment"># Confirmar que wallets sigue presente</span></div>
+
+<h2 class="page-break">II. Descompresión e Instalación del Oracle Client 21c</h2>
+<div class="skip-box">
+<strong>⏭️ Si <span class="inline-code">sqlplus -v</span> ya devuelve <span class="inline-code">Release 21.x</span></strong> y el cliente está sano, <strong>salte a la sección III (TNS)</strong>.
+</div>
+<h3>2.1 Ubicar el instalador</h3>
+<div class="code-block">ls -al /opt/oracle/LINUX.X64_213000_client_home.zip   <span class="comment"># Esperado: ~880 MB</span></div>
+
+<h3>2.2 Descomprimir en el directorio destino</h3>
+<div class="code-block">sudo mkdir -p /opt/oracle/client_home
+sudo unzip -q /opt/oracle/LINUX.X64_213000_client_home.zip -d /opt/oracle/client_home
+ls /opt/oracle/client_home/
+ls /opt/oracle/client_home/bin/sqlplus</div>
+
+<h3>2.3 Asignar propietario y permisos</h3>
+<div class="code-block">sudo chown -R oracle:oracle /opt/oracle/client_home
+<span class="comment"># Dar lectura al usuario python sobre librerías, Java y PKI:</span>
+sudo chmod -R o+rX /opt/oracle/client_home/lib
+sudo chmod -R o+rX /opt/oracle/client_home/jlib
+sudo chmod -R o+rX /opt/oracle/client_home/jdk
+sudo chmod -R o+rX /opt/oracle/client_home/network/admin
+cat /opt/oracle/client_home/jlib/oraclepki.jar > /dev/null && echo "OK: python lee jlib" || echo "ERROR: sin lectura"</div>
+<div class="info-box">
+Al hacer <span class="inline-code">chown -R oracle:oracle</span>, muchos <span class="inline-code">.jar</span> vienen con permisos 640/750 (sin lectura para "otros"). Como <span class="inline-code">python</span> no es <span class="inline-code">oracle</span>, no puede leer <span class="inline-code">oraclepki.jar</span> y orapki falla. El <span class="inline-code">chmod -R o+rX</span> lo resuelve. El wallet puede ser <span class="inline-code">python:python</span>; no necesita oinstall.
+</div>
+
+<h3>2.4 Verificar versión y componentes del wallet</h3>
+<div class="code-block">sqlplus -v
+which orapki && which mkstore && which tnsping
+ls -la ${ORACLE_HOME}/jdk/bin/java
+ls -la ${ORACLE_HOME}/jlib/oraclepki.jar</div>
+
+<h2 class="page-break">III. Configuración de SQLNET.ORA y TNSNAMES.ORA</h2>
+<div class="ctx-box">
+<strong>📍 Contexto de ejecución:</strong> siga como <span class="inline-code">python</span> (verifique con <span class="inline-code">whoami</span>). Párese en el directorio de red de Oracle:
+</div>
+<div class="code-block">cd /opt/oracle/client_home/network/admin
+pwd   <span class="comment"># Confirmar: /opt/oracle/client_home/network/admin</span></div>
+
+<h3>3.1 Colocar los archivos .ora y darlos al usuario python</h3>
+<div class="code-block"><span class="comment"># Crear vacíos y darlos a python (luego pega el contenido)</span>
+sudo touch ${TNS_ADMIN}/sqlnet.ora ${TNS_ADMIN}/tnsnames.ora
+sudo chown python:python ${TNS_ADMIN}/sqlnet.ora ${TNS_ADMIN}/tnsnames.ora
+sudo chmod 644 ${TNS_ADMIN}/sqlnet.ora ${TNS_ADMIN}/tnsnames.ora
+ls -la ${TNS_ADMIN}/</div>
+
+<h4>Contenido del sqlnet.ora (editar sin sudo)</h4>
+<div class="code-block">vim ${TNS_ADMIN}/sqlnet.ora
+
+<span class="comment"># sqlnet.ora — autenticación por wallet</span>
+NAMES.DIRECTORY_PATH= (TNSNAMES, EZCONNECT)
+WALLET_LOCATION =
+        (SOURCE =
+            (METHOD = FILE)
+            (METHOD_DATA = (DIRECTORY = /opt/oracle/wallets))
+)
+SQLNET.WALLET_OVERRIDE = TRUE
+SSL_CLIENT_AUTHENTICATION = FALSE
+SSL_VERSION = 0</div>
+<div class="info-box">
+Si aparece <span class="inline-code">ORA-12638: credential retrieval failed</span>, agregue <span class="inline-code">SQLNET.AUTHENTICATION_SERVICES= (NONE)</span> al sqlnet.ora. Con NONE, Oracle usa exclusivamente el wallet.
+</div>
+
+<h3>3.2 Editar tnsnames.ora — DOS bases: STAR_BI_DWH y SRIDW</h3>
+<div class="code-block">vim ${TNS_ADMIN}/tnsnames.ora</div>
+<p>El alias <span class="inline-code">STAR_BI_DWH</span> coincide exactamente con el del wallet y con <span class="inline-code">configlnx.toml</span>. Use el bloque correspondiente a su ambiente; el alias se mantiene igual en los tres, lo que cambia es el HOST.</p>
+
+<h4>STAR_BI_DWH — Desarrollo (10.12.4.94)</h4>
+<div class="code-block">STAR_BI_DWH  =
+  (DESCRIPTION=
+    (ADDRESS=
+      (PROTOCOL=TCP)
+      (HOST=sri33)
+      (PORT=1521)
+    )
+    (CONNECT_DATA=
+      (SERVER=dedicated)
+      (SERVICE_NAME=STAR)
+    )
+  )</div>
+
+<h4>STAR_BI_DWH — Preproducción / Test (10.12.5.204)</h4>
+<div class="code-block">STAR_BI_DWH =
+  (DESCRIPTION=
+    (ADDRESS=
+      (PROTOCOL=TCP)
+      (HOST=10.12.3.95)
+      (PORT=1521)
+    )
+    (CONNECT_DATA=
+      (SERVER=dedicated)
+      (SERVICE_NAME=star)
+    )
+  )</div>
+
+<h4>STAR_BI_DWH — Producción (10.2.2.218)</h4>
+<div class="code-block">STAR_BI_DWH =
+  (DESCRIPTION=
+    (ADDRESS=
+      (PROTOCOL=TCP)
+      (HOST=sri28)
+      (PORT=1521)
+    )
+    (CONNECT_DATA=
+      (INSTANCE_NAME=star)
+      (SERVER=dedicated)
+      (SERVICE_NAME=STAR)
+    )
+  )</div>
+<div class="info-box">
+Confirme HOST y SERVICE_NAME con el DBA. En producción el host suele ser <span class="inline-code">sri23v</span> / <span class="inline-code">sri22v</span> (o el SCAN correspondiente) en lugar de <span class="inline-code">sri33</span> (desarrollo).
+</div>
+
+<h4>SRIDW — segunda base (agregar el bloque del ambiente correspondiente)</h4>
+<p>En el mismo <span class="inline-code">tnsnames.ora</span>, agregar el bloque de SRIDW según el ambiente:</p>
+<div class="code-block"><span class="comment"># --- Desarrollo ---</span>
+SRIDW=
+  (DESCRIPTION=
+    (ADDRESS=
+      (PROTOCOL=TCP)
+      (HOST=10.12.4.10)
+      (PORT=1523)
+    )
+    (CONNECT_DATA=
+      (INSTANCE_NAME=SRIDW)
+      (SERVER=dedicated)
+      (SERVICE_NAME=SRIDW)
+    )
+  )
+
+<span class="comment"># --- Test ---</span>
+SRIDW=
+  (DESCRIPTION=
+    (ADDRESS=
+      (PROTOCOL=TCP)
+      (HOST=10.12.3.71)
+      (PORT=1521)
+    )
+    (CONNECT_DATA=
+      (SERVER=dedicated)
+      (SERVICE_NAME=SRIDW)
+    )
+  )
+
+<span class="comment"># --- Producción ---</span>
+SRIDW=
+  (DESCRIPTION =
+    (ADDRESS_LIST =
+      (ADDRESS = (PROTOCOL = TCP)(HOST = sridw-scan.sri.ad)(PORT = 1521))
+    )
+    (CONNECT_DATA =
+      (SERVICE_NAME = sridw)
+    )
+  )</div>
+<div class="alert-box">
+<strong>⚠️ Un solo bloque SRIDW por archivo.</strong> Use únicamente el bloque del ambiente en el que está trabajando. No deje los tres bloques <span class="inline-code">SRIDW=</span> simultáneamente en el mismo <span class="inline-code">tnsnames.ora</span>: Oracle tomaría el primero y podría conectar al ambiente equivocado.
+</div>
+
+<h3>3.3 Validar resolución TNS de ambas bases</h3>
+<div class="code-block">tnsping STAR_BI_DWH; echo "exit code: $?"
+tnsping SRIDW;        echo "exit code: $?"</div>
+<div class="ctx-box">
+<strong>📍 RHEL 10:</strong> <span class="inline-code">tnsping</span> puede no imprimir nada y eso es NORMAL (glibc 2.39). Si <span class="inline-code">echo $?</span> devuelve 0, la resolución funciona. La validación real es con <span class="inline-code">sqlplus /@ALIAS</span> (sección V).
+</div>
+
+<h2 class="page-break">IV. Wallet con Autologin — Cinco Escenarios</h2>
+<div class="ctx-box">
+<strong>📍 Contexto:</strong> usuario <span class="inline-code">python</span> (verifique con <span class="inline-code">whoami</span>). Los comandos <span class="inline-code">orapki</span> y <span class="inline-code">mkstore</span> usan la ruta completa del wallet (<span class="inline-code">-wrl /opt/oracle/wallets</span>), así que puede ejecutarlos desde cualquier directorio. No necesita sudo salvo para crear el directorio del wallet la primera vez.
+</div>
+<p>Orden de preferencia: crear desde cero (A) → usar el existente (B) → restaurar de respaldo (C) → traer del sriapp36 (D). Para sumar un alias a un wallet que ya funciona, ver el Escenario E.</p>
+<div class="info-box">
+<strong>Regla transversal.</strong> Si restaura un wallet (C o D) y no funciona (<span class="inline-code">Invalid padding</span>, sigue pidiendo contraseña, o el listado falla), no insista: cree el wallet desde cero (A). Es la opción más predecible.
+</div>
+
+<h3>4.0 Pre-chequeo obligatorio: Java para orapki/mkstore</h3>
+<div class="code-block"><span class="comment"># 1) JDK del cliente existe y JAVA_HOME apunta a él</span>
+ls -la ${ORACLE_HOME}/jdk/bin/java
+echo "JAVA_HOME=$JAVA_HOME"
+
+<span class="comment"># 2) python PUEDE LEER los .jar de PKI (causa #1 de fallo)</span>
+cat ${ORACLE_HOME}/jlib/oraclepki.jar > /dev/null && echo "OK: lee jlib" || echo "ERROR: sin lectura -> chmod (2.3)"
+
+<span class="comment"># 3) Si JAVA_HOME está vacío, exportarlo</span>
+export JAVA_HOME=${ORACLE_HOME}/jdk
+export PATH=${JAVA_HOME}/bin:${PATH}
+
+<span class="comment"># 4) Prueba: debe imprimir versión, no error de clase</span>
+orapki wallet create -wallet /opt/oracle/wallets -auto_login -pwd <span class="var">[clave]</span> 2>&1 | head -3</div>
+
+<h3>Escenario A — Crear el wallet desde cero (recomendado)</h3>
+<div class="code-block"><span class="comment"># 1) Directorio del wallet</span>
+sudo rm -rf /opt/oracle/wallets/
+sudo mkdir -p /opt/oracle/wallets
+sudo chown python:python /opt/oracle/wallets
+sudo chmod 755 /opt/oracle/wallets
+
+<span class="comment"># 2) Crear wallet con autologin PORTABLE (genera ewallet.p12 + cwallet.sso)</span>
+orapki wallet create -wallet /opt/oracle/wallets -auto_login
+<span class="comment"># Solicita contraseña para el wallet. Guárdela en gestor seguro.</span>
+
+<span class="comment"># 3) Agregar las DOS credenciales: alias esquema clave (las provee el DBA)</span>
+mkstore -wrl /opt/oracle/wallets -createCredential STAR_BI_DWH BI_DWH <span class="var">[CLAVE_STAR]</span>
+mkstore -wrl /opt/oracle/wallets -createCredential SRIDW <span class="var">[ESQUEMA_SRIDW]</span> <span class="var">[CLAVE_SRIDW]</span>
+
+<span class="comment"># 4) Verificar que aparezcan AMBAS</span>
+mkstore -wrl /opt/oracle/wallets -listCredential</div>
+<div class="ok-box">
+El <span class="inline-code">-listCredential</span> debe mostrar las dos: <span class="inline-code">STAR_BI_DWH</span> y <span class="inline-code">SRIDW</span>. Se usa <span class="inline-code">-auto_login</span> (no <span class="inline-code">-auto_login_local</span>) para que el wallet sea portable.
+</div>
+
+<h3>Escenario B — El wallet ya existe en el servidor</h3>
+<div class="code-block">ls -la /opt/oracle/wallets/   <span class="comment"># Esperado: cwallet.sso + ewallet.p12 (python:python, 600)</span>
+mkstore -wrl /opt/oracle/wallets -listCredential</div>
+<p>Si lista las credenciales correctamente, no toque nada y pase a validar (sección V). Para agregar SRIDW a un wallet que solo tiene STAR_BI_DWH, vea la sección IV-bis.</p>
+
+<h3>Escenario C — Restaurar de un respaldo propio</h3>
+<div class="code-block">sudo cp /home/python/oracle_backup_<span class="var">AAAAMMDD_HHMMSS</span>/wallets_copia/* /opt/oracle/wallets/
+sudo chown python:python /opt/oracle/wallets/*
+sudo chmod 600 /opt/oracle/wallets/cwallet.sso /opt/oracle/wallets/ewallet.p12
+mkstore -wrl /opt/oracle/wallets -listCredential</div>
+<div class="alert-box">
+Si falla (<span class="inline-code">Invalid padding</span> o sigue pidiendo contraseña): el respaldo está dañado o el <span class="inline-code">cwallet.sso</span> era local al servidor de origen. Vaya al Escenario A.
+</div>
+
+<h3>Escenario D — Traer el wallet del sriapp36</h3>
+<p>Solo el <span class="inline-code">ewallet.p12</span> es portable. Tráigalo y regenere el <span class="inline-code">cwallet.sso</span> en este servidor:</p>
+<div class="code-block">sudo cp <span class="var">[ruta]</span>/ewallet.p12 /opt/oracle/wallets/
+sudo chown python:python /opt/oracle/wallets/ewallet.p12
+sudo chmod 600 /opt/oracle/wallets/ewallet.p12
+orapki wallet create -wallet /opt/oracle/wallets -auto_login   <span class="comment"># regenera cwallet.sso local</span>
+mkstore -wrl /opt/oracle/wallets -listCredential</div>
+
+<h3>Escenario E — Agregar un alias nuevo a un wallet existente</h3>
+<div class="code-block">vim ${TNS_ADMIN}/tnsnames.ora                                  <span class="comment"># 1) agregar el bloque del nuevo alias</span>
+mkstore -wrl /opt/oracle/wallets -createCredential <span class="var">NUEVO_ALIAS</span> <span class="var">ESQUEMA</span> <span class="var">[CLAVE]</span>   <span class="comment"># 2) credencial</span>
+mkstore -wrl /opt/oracle/wallets -listCredential              <span class="comment"># 3) verificar y probar</span>
+tnsping <span class="var">NUEVO_ALIAS</span>
+sqlplus /@<span class="var">NUEVO_ALIAS</span></div>
+
+<h2 class="page-break">IV-bis. Agregar la Credencial SRIDW a un Wallet que ya Tiene STAR_BI_DWH</h2>
+<div class="ctx-box">
+<strong>📍 Caso típico de este proyecto:</strong> el wallet de Trazabilidad ya existe con STAR_BI_DWH y solo falta sumar SRIDW. No hay que recrear nada: son dos pasos.
+</div>
+<h4>Paso 1 — Agregar el bloque SRIDW al tnsnames.ora</h4>
+<div class="code-block">vim ${TNS_ADMIN}/tnsnames.ora
+<span class="comment"># Pegar el bloque SRIDW del ambiente correspondiente (ver sección 3.2)</span>
+tnsping SRIDW; echo "exit code: $?"</div>
+
+<h4>Paso 2 — Agregar la credencial SRIDW al wallet existente</h4>
+<div class="code-block">mkstore -wrl /opt/oracle/wallets -createCredential SRIDW <span class="var">[ESQUEMA_SRIDW]</span> <span class="var">[CLAVE_SRIDW]</span>
+<span class="comment"># Pide la contraseña del wallet (la que se definió al crearlo)</span>
+mkstore -wrl /opt/oracle/wallets -listCredential
+<span class="comment"># Debe listar AHORA: STAR_BI_DWH y SRIDW</span></div>
+
+<h4>Paso 3 — Validar SRIDW</h4>
+<div class="code-block">sqlplus /@SRIDW
+<span class="comment"># Conexión exitosa = entra sin pedir contraseña</span></div>
+
+<h2 class="page-break">V. Validación de Conexión</h2>
+<h3>5.1 Prueba con SQL*Plus (sin contraseña) — ambas bases</h3>
+<div class="code-block">sqlplus /@STAR_BI_DWH
+<span class="comment"># Connected to: ... SQL>  (sin pedir contraseña)</span>
+sqlplus /@SRIDW
+<span class="comment"># Connected to: ... SQL>  (sin pedir contraseña)</span></div>
+<div class="ok-box">
+Si ambas conectan sin pedir contraseña, el autologin del wallet funciona para las dos bases del proyecto.
+</div>
+
+<h3>5.2 Prueba con Python (oracledb, instalación OFFLINE) — ambas bases</h3>
+<div class="ctx-box">
+<strong>📍 Producción sin internet:</strong> traiga el wheel <span class="inline-code">cp313 / manylinux x86_64</span> de <span class="inline-code">oracledb</span> a <span class="inline-code">/opt/librerias</span> e instálelo offline. Como el ETL usa modo Thick (<span class="inline-code">init_oracle_client()</span>), no hace falta <span class="inline-code">cryptography</span>; con <span class="inline-code">--no-deps</span> funciona.
+</div>
+<div class="code-block"><span class="comment"># Instalar offline en el venv del proyecto</span>
+source /home/python/sri_datos_abiertos_facturacion/venv/bin/activate
+pip install --no-index --no-deps --find-links=/opt/librerias oracledb
+python3 -c "import oracledb; print('oracledb', oracledb.version)"
+
+<span class="comment"># Probar conexión por wallet a las DOS bases</span>
+python3.13 - << 'PYEOF'
+import oracledb, os
+os.environ['TNS_ADMIN']   = '/opt/oracle/client_home/network/admin'
+os.environ['ORACLE_HOME'] = '/opt/oracle/client_home'
+oracledb.init_oracle_client()
+for alias in ('STAR_BI_DWH', 'SRIDW'):
+    with oracledb.connect(dsn=alias) as con, con.cursor() as cur:
+        cur.execute("SELECT 1 FROM dual")
+        print(f"OK {alias}:", cur.fetchone())
+PYEOF
+deactivate</div>
+
+<h2 class="page-break">VI. Solución de Problemas Comunes</h2>
+<table>
+  <tr><th>Síntoma</th><th>Causa probable</th><th>Acción</th></tr>
+  <tr><td>ORA-12638: Credential retrieval failed</td><td>Alias del wallet ≠ tnsnames.ora ≠ configlnx.toml; o falta NONE</td><td>Verificar que el alias coincida en los tres lugares. Agregar <span class="inline-code">SQLNET.AUTHENTICATION_SERVICES= (NONE)</span> al sqlnet.ora.</td></tr>
+  <tr><td>orapki/mkstore: Could not find or load main class</td><td>python no puede leer los .jar; o falta JAVA_HOME</td><td><span class="inline-code">chmod -R o+rX</span> en jlib/lib/jdk y exportar <span class="inline-code">JAVA_HOME=${ORACLE_HOME}/jdk</span>.</td></tr>
+  <tr><td>sqlplus /@SRIDW pide contraseña</td><td>Falta la credencial SRIDW en el wallet</td><td>Ejecutar la sección IV-bis (<span class="inline-code">createCredential SRIDW</span>).</td></tr>
+  <tr><td>Conecta STAR pero no SRIDW (TNS-12154)</td><td>Falta el bloque SRIDW en tnsnames.ora o ambiente equivocado</td><td>Agregar el bloque SRIDW del ambiente correcto (3.2). Un solo bloque por archivo.</td></tr>
+  <tr><td>ImportError: libclntsh.so</td><td>LD_LIBRARY_PATH sin la ruta del cliente</td><td><span class="inline-code">export LD_LIBRARY_PATH=$ORACLE_HOME/lib:$LD_LIBRARY_PATH</span> y verificar lectura.</td></tr>
+  <tr><td>Spark no lee el wallet</td><td>Falta oracle.net.wallet_location en el servicio</td><td>El servicio Spark (Manual 1, 8.5) ya define <span class="inline-code">-Doracle.net.wallet_location=/opt/oracle/wallets</span>. Reiniciar el servicio.</td></tr>
+</table>
+
+<h2 class="page-break">VII. Comandos Rápidos de Referencia</h2>
+<div class="code-block">whoami; id python
+env | grep -E "ORACLE|TNS|LD_LIBRARY" | sort
+ls -la /opt/oracle/wallets/
+mkstore -wrl /opt/oracle/wallets -listCredential   <span class="comment"># Debe listar STAR_BI_DWH y SRIDW</span>
+tnsping STAR_BI_DWH; tnsping SRIDW
+sqlplus /@STAR_BI_DWH
+sqlplus /@SRIDW</div>
+
+<div class="footer">
+SRI — Ingeniería de Datos · Datos Abiertos Facturación · Manual de Wallet Oracle (STAR_BI_DWH + SRIDW) · Junio 2026
+</div>
+
+</body>
+</html>
